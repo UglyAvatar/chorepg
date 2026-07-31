@@ -1,5 +1,3 @@
-# chorepg
-RPG style chore driven game
 # ⚔️ Chore RPG
 
 > **Turn real-life household productivity into an epic tabletop campaign!**
@@ -10,7 +8,7 @@ RPG style chore driven game
 
 ## ✨ Features
 
-- 🧹 **Work Phase (Quest Board):** Check off real-world tasks (bathroom cleaning, laundry, vacuuming) to collect bonus dice for your total pool.
+- 🧹 **Work Phase (Quest Board):** Check off real-world tasks (cleaning, organizing, maintenance) to collect bonus dice for your total pool.
 - ⚔️ **Encounter Arena:** Face off against enemies ranging from Dust Slimes (DC 8) to Kitchen Overlords (DC 15) or set a custom target difficulty.
 - 🛡️ **Active Roster & Hero Library:** Maintain 4 active party members per block. Quickly edit profiles or swap returning heroes from a persistent player library.
 - 🏅 **MVP Selection & Combat Log:** Designate a standout hero for each fight and track your campaign's victory and defeat timeline.
@@ -47,3 +45,48 @@ RPG style chore driven game
 
 ## 📖 The 30-Minute Gameplay Loop
 
++-------------------------------------------------------------+
+|                      30-MINUTE BLOCK                        |
++-------------------------------------------------------------+
+|                                                             |
+|   1. SET ROSTER     -->  Assign 4 active hero slots        |
+|                                                             |
+|   2. WORK PHASE     -->  Spend 20-25 mins doing chores     |
+|                          Check off quests = Earn bonus dice |
+|                                                             |
+|   3. ENCOUNTER ARENA -->  Set Threat DC Target & select MVP  |
+|                          Unleash your total dice pool!       |
+|                                                             |
+|   4. BACKUP DATA    -->  Use Export/Import to save history  |
+|                                                             |
++-------------------------------------------------------------+
+
+---
+
+## 💡 Customizable Chore Preset Ideas
+
+Need inspiration for structuring your quest board? Here are recommended real-world task categories to pair with dice rewards:
+
+| Real-World Chore | Fantasy Quest Name | Reward Dice |
+| :--- | :--- | :--- |
+| Clear & wipe dining table | *Purify the Grand Dining Hall* | `+1 d4` |
+| Take out trash & recycling | *Clear the Dungeon Refuse* | `+1 d4` |
+| Vacuum main room / hallways | *Banish the Dust Elementals* | `+1 d6` |
+| Fold and put away laundry | *Sort the Armor Inventory* | `+1 d6` |
+| Deep clean bathroom | *Scrub the Alchemist's Lab* | `+1 d8` |
+| Mop or scrub kitchen floors | *Scour the Overlord's Fortress* | `+1 d8` |
+
+---
+
+## 🛠️ Built With
+
+- **HTML5 & Vanilla JavaScript (ES6+)** – Zero external frameworks required.
+- **Tailwind CSS (CDN)** – Clean, modern, dark-mode visual interface.
+- **Web Storage API (`localStorage`)** – Persistent state retention across sessions.
+- **FileReader & Blob API** – Client-side JSON file export and import.
+
+---
+
+## 📄 License
+
+Distributed under the **MIT License**. See `LICENSE` for more information.
