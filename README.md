@@ -19,6 +19,19 @@
 - 📥 **Export & Import Save Backups:** Easily backup your campaign to a JSON file (`ChoreRPG_Save_YYYY-MM-DD.json`) or transfer save history between devices.
 - 📱 **Mobile & iOS Friendly:** Fully responsive design built with Tailwind CSS. Can be added directly to your mobile Home Screen as a standalone web app.
 
+### ✨ AI Story Generation (Powered by Google Gemini)
+Chore RPG includes optional, free-tier AI story generation to keep your campaign fresh and immersive. You can automatically generate custom narrative hooks for your encounters using Google Gemini.
+
+#### How to Get a Free API Key:
+1. Head over to [Google AI Studio API Keys](https://aistudio.google.com/api-keys).
+2. Click the **+ Create API key** button in the top right corner.
+3. Copy your newly generated key.
+
+#### How to Use It in the App:
+1. Switch to the **Encounter Arena** tab during your rest phase.
+2. Click the **✨ Generate AI Hook** button next to the Story Narrative Seed field.
+3. Paste your API key into the prompt when asked. The key is saved securely in your browser's `localStorage` so you only have to enter it once!
+4. The text box will instantly populate with a custom fantasy campaign prompt tied to your chore routines.
 ---
 
 ## 🚀 Quick Start & Deployment
@@ -89,7 +102,6 @@ Need inspiration for structuring your quest board? Here are recommended real-wor
 - **FileReader & Blob API** – Client-side JSON file export and import.
 
 ---
-
 ## 📄 License
 
 Distributed under the **MIT License**. See `LICENSE` for more information.
