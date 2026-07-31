@@ -481,16 +481,55 @@
         });
     }
 
-    function enableSlotEdit(slotId) {
+   function enableSlotEdit(slotId) {
         const slot = state.activeSlots.find(s => s.id === slotId);
         if (!slot) return;
 
         const displayDiv = document.getElementById(`slot-display-${slotId}`);
         if (!displayDiv) return;
 
+        const iconOptions = [
+            // --- Cute & Whimsical Archetypes ---
+            { icon: "🧚", label: "Fairy / Pixie" },
+            { icon: "👑", label: "Elemental Princess" },
+            { icon: "🦄", label: "Unicorn Knight" },
+            { icon: "🧹", label: "Cute Witch" },
+            { icon: "🧜‍♀️", label: "Mermaid Songstress" },
+            { icon: "🌟", label: "Starlight Mage" },
+            { icon: "🪷", label: "Forest Nymph" },
+            { icon: "🐱", label: "Cat Rogue / Felis" },
+            { icon: "🧪", label: "Potion Alchemist" },
+            { icon: "🍄", label: "Mushroom Druid" },
+
+            // --- Classic D&D Classes ---
+            { icon: "🛡️", label: "Paladin / Shield" },
+            { icon: "⚔️", label: "Fighter / Swords" },
+            { icon: "🏹", label: "Ranger / Bow" },
+            { icon: "🗡️", label: "Rogue / Dagger" },
+            { icon: "🧙", label: "Wizard / Hat" },
+            { icon: "🔮", label: "Sorcerer / Orb" },
+            { icon: "🪕", label: "Bard / Lute" },
+            { icon: "🌿", label: "Druid / Nature" },
+            { icon: "🪓", label: "Barbarian / Axe" },
+            { icon: "🔨", label: "Cleric / Hammer" },
+            { icon: "🥋", label: "Monk / Fist" },
+            { icon: "👁️", label: "Warlock / Eye" },
+            { icon: "⚙️", label: "Artificer / Gear" },
+            { icon: "🐉", label: "Dragon" }
+        ];
+
+        let selectOptions = iconOptions.map(opt => 
+            `<option value="${opt.icon}" ${opt.icon === slot.icon ? 'selected' : ''}>${opt.icon} ${opt.label}</option>`
+        ).join('');
+
         displayDiv.innerHTML = `
             <div class="space-y-1 my-0.5">
-                <input type="text" id="edit-name-${slotId}" value="${slot.name.replace(/"/g, '&quot;')}" placeholder="Hero Name" class="w-full text-xs p-1 bg-slate-950 border border-amber-500/50 rounded text-slate-100 focus:outline-none">
+                <div class="flex gap-1">
+                    <select id="edit-icon-${slotId}" class="text-xs p-1 bg-slate-950 border border-slate-700 rounded text-slate-100 focus:outline-none">
+                        ${selectOptions}
+                    </select>
+                    <input type="text" id="edit-name-${slotId}" value="${slot.name.replace(/"/g, '&quot;')}" placeholder="Hero Name" class="flex-1 text-xs p-1 bg-slate-950 border border-amber-500/50 rounded text-slate-100 focus:outline-none">
+                </div>
                 <input type="text" id="edit-class-${slotId}" value="${slot.class.replace(/"/g, '&quot;')}" placeholder="Class (e.g. Rogue)" class="w-full text-[11px] p-1 bg-slate-950 border border-slate-700 rounded text-slate-400 focus:outline-none">
                 <button onclick="saveSlotEdit(${slotId})" class="w-full mt-1 bg-amber-500 text-slate-950 font-bold text-[10px] py-0.5 rounded shadow">
                     Save Hero
@@ -502,24 +541,26 @@
     function saveSlotEdit(slotId) {
         const nameInput = document.getElementById(`edit-name-${slotId}`);
         const classInput = document.getElementById(`edit-class-${slotId}`);
+        const iconSelect = document.getElementById(`edit-icon-${slotId}`);
         if (!nameInput) return;
 
         const newName = nameInput.value.trim() || `Player ${slotId}`;
         const newClass = classInput.value.trim() || "Adventurer";
+        const newIcon = iconSelect ? iconSelect.value : "🛡️";
 
         const slot = state.activeSlots.find(s => s.id === slotId);
         if (slot) {
             slot.name = newName;
             slot.class = newClass;
+            slot.icon = newIcon;
         }
 
         const existingInLib = state.heroLibrary.find(h => h.name.toLowerCase() === newName.toLowerCase());
         if (!existingInLib) {
-            const icons = ["🛡️", "🏹", "🔮", "🗡️", "⚡", "🐉", "⚔️", "🌟"];
-            const randomIcon = slot ? slot.icon : icons[Math.floor(Math.random() * icons.length)];
-            state.heroLibrary.push({ name: newName, class: newClass, icon: randomIcon });
+            state.heroLibrary.push({ name: newName, class: newClass, icon: newIcon });
         } else {
             existingInLib.class = newClass;
+            existingInLib.icon = newIcon;
         }
 
         renderActiveSlots();
