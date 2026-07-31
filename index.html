@@ -1070,10 +1070,11 @@
                     throw new Error("Could not parse AI response.");
                 }
             } catch (err) {
-                console.error("Gemini API Error:", err);
-                alert("Generation failed. Please check if your Gemini API key is correct.");
-                if (promptInput) promptInput.value = state.activeStoryPrompt || "";
-            } finally {
+            console.error("Gemini API Error:", err);
+            localStorage.removeItem('gemini_api_key'); // Automatically clears the bad key!
+            alert("Generation failed. Your stored API key was invalid or incorrect and has been cleared. Please click 'Generate AI Hook' again to enter a fresh key.");
+            if (promptInput) promptInput.value = state.activeStoryPrompt || "";
+        } finally {
                 if (promptInput) promptInput.disabled = false;
             }
         }
