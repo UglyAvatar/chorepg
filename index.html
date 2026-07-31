@@ -139,8 +139,8 @@
                 <input type="text" id="custom-chore-desc" placeholder="e.g. Clean the Bathroom" class="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-200 text-xs focus:outline-none focus:border-amber-500/50">
             </div>
             <div class="space-y-1">
-                <label class="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-400">Loot Reward (Dice)</label>
-                <div class="flex gap-2">
+                <label class="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-400">Loot Reward & Options</label>
+                <div class="flex gap-2 items-center">
                     <select id="custom-chore-loot" class="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-200 text-xs focus:outline-none focus:border-amber-500/50">
                         <option value="d4">+1d4 Pool</option>
                         <option value="d6" selected>+1d6 Pool</option>
@@ -149,6 +149,11 @@
                     <button onclick="addNewChoreToBoard()" class="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs transition-colors whitespace-nowrap">
                         Add Quest
                     </button>
+                </div>
+                <!-- SAVE LOCK CHECKBOX (IGNORES ERASE/RESET BUTTONS) -->
+                <div class="flex items-center gap-2 pt-1.5">
+                    <input type="checkbox" id="custom-chore-locked" class="rounded bg-slate-900 border-slate-700 text-amber-500 focus:ring-0 w-3.5 h-3.5 cursor-pointer">
+                    <label for="custom-chore-locked" class="text-[11px] text-slate-400 cursor-pointer select-none">🔒 Lock / Save Task (Ignore Reset)</label>
                 </div>
             </div>
         </div>
@@ -1180,6 +1185,7 @@ function addNewChoreToBoard() {
     const title = document.getElementById('custom-chore-title').value.trim();
     const desc = document.getElementById('custom-chore-desc').value.trim();
     const loot = document.getElementById('custom-chore-loot').value;
+    const isLocked = document.getElementById('custom-chore-locked')?.checked || false;
 
     if (!title || !desc) {
         alert("Please provide both a fantasy quest name and a real-world chore description!");
@@ -1199,11 +1205,30 @@ function addNewChoreToBoard() {
         description: desc,
         loot: loot,
         completed: false,
-        custom: true
+        custom: true,
+        locked: isLocked // Saves the ignore/lock flag
     });
 
+    // Clear inputs and uncheck lock box
     document.getElementById('custom-chore-title').value = '';
     document.getElementById('custom-chore-desc').value = '';
+    const lockBox = document.getElementById('custom-chore-locked');
+    if (lockBox) lockBox.checked = false;
+
+    if (typeof saveState === 'function') saveState();
+    if (typeof renderQuestBoard === 'function') {
+        renderQuestBoard();
+    } else {
+        location.reload();
+    }
+}
+
+// Updated Reset / Erase Function that respects locked tasks and completely clears unlocked ones
+function resetChoresForNewSet() {
+    if (typeof state === 'undefined' || !state.chores) return;
+
+    // Keep only chores that have locked: true. Wipe out all other standard/unlocked tasks.
+    state.chores = state.chores.filter(chore => chore.locked === true);
 
     if (typeof saveState === 'function') saveState();
     if (typeof renderQuestBoard === 'function') {
