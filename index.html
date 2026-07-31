@@ -1199,14 +1199,19 @@ function addNewChoreToBoard() {
         state.chores = [];
     }
 
+    // Map all possible property names (title/name, description/realWorld, loot/dice) to prevent 'undefined' errors
     state.chores.push({
         id: 'chore_' + Date.now(),
         title: title,
+        name: title,
         description: desc,
+        realWorld: desc,
+        real: desc,
         loot: loot,
+        dice: loot,
         completed: false,
         custom: true,
-        locked: isLocked // Saves the ignore/lock flag
+        locked: isLocked
     });
 
     // Clear inputs and uncheck lock box
@@ -1223,11 +1228,22 @@ function addNewChoreToBoard() {
     }
 }
 
-// Updated Reset / Erase Function that respects locked tasks and completely clears unlocked ones
+// Toggle individual chore lock/save status directly from its card checkbox
+function toggleChoreLock(choreId, isLocked) {
+    if (typeof state === 'undefined' || !state.chores) return;
+    
+    const chore = state.chores.find(c => c.id === choreId);
+    if (chore) {
+        chore.locked = isLocked;
+        if (typeof saveState === 'function') saveState();
+    }
+}
+
+// Updated Reset / Erase Function that clears everything except individually locked/saved tasks
 function resetChoresForNewSet() {
     if (typeof state === 'undefined' || !state.chores) return;
 
-    // Keep only chores that have locked: true. Wipe out all other standard/unlocked tasks.
+    // Filter out all chores where locked is not true
     state.chores = state.chores.filter(chore => chore.locked === true);
 
     if (typeof saveState === 'function') saveState();
@@ -1236,6 +1252,51 @@ function resetChoresForNewSet() {
     } else {
         location.reload();
     }
+}
+
+// Robust Quest Board Renderer ensuring individual lock checkboxes and correct property mapping
+function renderQuestBoard() {
+    const container = document.getElementById('chores-container');
+    if (!container) return;
+
+    if (!state.chores || state.chores.length === 0) {
+        container.innerHTML = '<div class="col-span-full text-center py-6 text-slate-500 text-xs italic">No active quests on the board. Add custom quests or reset to generate new ones!</div>';
+        return;
+    }
+
+    container.innerHTML = state.chores.map((chore, index) => {
+        const titleText = chore.title || chore.name || "Unnamed Quest";
+        const descText = chore.description || chore.realWorld || chore.real || "No description";
+        const lootText = chore.loot || chore.dice || "d6";
+        const isChecked = chore.completed ? 'checked' : '';
+        const isLocked = chore.locked ? 'checked' : '';
+
+        return `
+            <div class="p-4 rounded-2xl bg-slate-900/80 border ${chore.completed ? 'border-emerald-500/30 opacity-60' : 'border-slate-800'} flex flex-col justify-between space-y-3 relative group transition-all">
+                <div class="flex items-start justify-between gap-3">
+                    <div class="space-y-1">
+                        <h4 class="text-xs font-bold text-slate-200">${titleText}</h4>
+                        <p class="text-[11px] text-slate-400 italic">Real World: ${descText}</p>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <!-- Individual Card Save/Lock Checkbox -->
+                        <label class="flex items-center gap-1 cursor-pointer" title="Save/Lock quest (ignores reset)">
+                            <input type="checkbox" ${isLocked} onchange="toggleChoreLock('${chore.id}', this.checked)" class="rounded bg-slate-950 border-slate-700 text-amber-500 focus:ring-0 w-3 h-3 cursor-pointer">
+                            <span class="text-[10px] text-slate-500">🔒 Save</span>
+                        </label>
+                        <!-- Completion Checkbox -->
+                        <input type="checkbox" ${isChecked} onchange="toggleChoreCompletion('${chore.id}', this.checked)" class="rounded bg-slate-950 border-slate-700 text-emerald-500 focus:ring-0 w-4 h-4 cursor-pointer">
+                    </div>
+                </div>
+                <div class="flex items-center justify-between pt-2 border-t border-slate-800/60">
+                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-pink-500/10 border border-pink-500/20 text-pink-400 text-[10px] font-mono font-bold">
+                        🎁 LOOT: +1${lootText.toUpperCase()} POOL
+                    </span>
+                    ${chore.custom ? '<span class="text-[9px] font-mono text-amber-400/80 bg-amber-500/10 px-1.5 py-0.5 rounded">CUSTOM</span>' : ''}
+                </div>
+            </div>
+        `;
+    }).join('');
 }
 </script>
 </body>
