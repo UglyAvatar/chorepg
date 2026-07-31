@@ -1,0 +1,896 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chore RPG Web App</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @keyframes diceSpin {
+            0% { transform: rotate(0deg) scale(0.9); }
+            50% { transform: rotate(180deg) scale(1.1); }
+            100% { transform: rotate(360deg) scale(1); }
+        }
+        .rolling { animation: diceSpin 0.3s infinite linear; }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen p-4 sm:p-6 font-sans">
+
+    <div class="max-w-4xl mx-auto space-y-6">
+
+        <!-- HEADER & INVENTORY STATUS -->
+        <header class="p-4 sm:p-5 rounded-2xl bg-slate-900 border border-slate-800 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 shadow-xl">
+            <div>
+                <h1 class="text-xl sm:text-2xl font-black text-amber-400 tracking-wide">⚔️ Chore RPG</h1>
+                <p class="text-xs text-slate-400 mt-0.5">30-Minute Productivity & Campaign Loop</p>
+            </div>
+
+            <!-- Global Inventory Stats Bar + Data Transfer Buttons -->
+            <div class="flex flex-wrap items-center gap-2 text-xs font-mono w-full md:w-auto justify-between md:justify-end">
+                <div class="flex items-center gap-2">
+                    <div class="px-2.5 py-1 rounded-lg bg-amber-950/60 border border-amber-500/40 text-amber-300">
+                        d20: <strong id="inventory-d20">1</strong>
+                    </div>
+                    <div class="px-2.5 py-1 rounded-lg bg-indigo-950/60 border border-indigo-500/40 text-indigo-300">
+                        d4: <strong id="inventory-d4">0</strong>
+                    </div>
+                    <div class="px-2.5 py-1 rounded-lg bg-purple-950/60 border border-purple-500/40 text-purple-300">
+                        d6: <strong id="inventory-d6">0</strong>
+                    </div>
+                    <div class="px-2.5 py-1 rounded-lg bg-pink-950/60 border border-pink-500/40 text-pink-300">
+                        d8: <strong id="inventory-d8">0</strong>
+                    </div>
+                    <div class="px-2.5 py-1 rounded-lg bg-emerald-950/60 border border-emerald-500/40 text-emerald-300">
+                        Luck: <strong id="inventory-luck">1</strong>
+                    </div>
+                </div>
+
+                <!-- Export / Import Control Group -->
+                <div class="flex items-center gap-1.5 pt-2 md:pt-0 border-t md:border-t-0 border-slate-800 w-full md:w-auto justify-end">
+                    <button onclick="exportSaveData()" title="Export Save Backup File" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 text-[11px] font-sans font-medium transition flex items-center gap-1">
+                        <span>📥 Export</span>
+                    </button>
+                    <button onclick="triggerImport()" title="Import Save File" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 text-[11px] font-sans font-medium transition flex items-center gap-1">
+                        <span>📤 Import</span>
+                    </button>
+                    <input type="file" id="import-file-input" class="hidden" accept=".json" onchange="handleImportFile(event)">
+                </div>
+            </div>
+        </header>
+
+        <!-- THREE-WAY TAB NAVIGATION -->
+        <nav class="flex items-center space-x-2 border-b border-slate-800 pb-4">
+            <button id="btn-mode-work" onclick="switchMode('work')" class="px-4 py-2 rounded-lg font-bold text-xs transition bg-amber-500 text-slate-950 shadow">
+                🧹 Work Phase
+            </button>
+            <button id="btn-mode-relax" onclick="switchMode('relax')" class="px-4 py-2 rounded-lg font-bold text-xs transition text-slate-400 hover:text-slate-200">
+                ⚔️ Encounter Arena
+            </button>
+            <button id="btn-mode-instructions" onclick="switchMode('instructions')" class="px-4 py-2 rounded-lg font-bold text-xs transition text-slate-400 hover:text-slate-200">
+                📖 How to Play
+            </button>
+        </nav>
+
+        <!-- PANEL 1: WORK PHASE (QUEST BOARD & ROSTER) -->
+        <div id="panel-work" class="space-y-6">
+
+            <!-- ACTIVE ROSTER & VISITING HERO MEMORY -->
+            <div class="p-4 rounded-xl border border-slate-800 bg-slate-950/80">
+                <div class="flex justify-between items-center mb-3">
+                    <div>
+                        <h3 class="font-bold text-amber-400 text-sm tracking-wide flex items-center gap-2">
+                            <span>🛡️ Active Party (30-Min Block Roster)</span>
+                        </h3>
+                        <p class="text-[11px] text-slate-500">Tap ✏️ to edit hero profiles or quick-swap visiting guests/cousins.</p>
+                    </div>
+                </div>
+
+                <!-- 4 Player Grid Slots -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mb-4" id="active-players-grid">
+                    <!-- Rendered dynamically -->
+                </div>
+
+                <!-- MVP Selection -->
+                <div class="pt-3 border-t border-slate-800">
+                    <label class="block text-xs font-semibold text-slate-400 mb-2">🏅 Standout Hero / MVP for Encounter:</label>
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2" id="player-mvp-selectors">
+                        <!-- Rendered dynamically -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- QUEST BOARD -->
+            <div class="space-y-3">
+                <div class="flex justify-between items-center">
+                    <h3 class="font-bold text-sm text-slate-300 uppercase tracking-wider">📋 Quest Board (Household Chores)</h3>
+                    <button onclick="resetChoresForNewSet()" class="text-[11px] px-2.5 py-1 rounded bg-slate-900 border border-slate-800 text-slate-400 hover:text-slate-200 transition">
+                        🔄 Reset Chores for Next Set
+                    </button>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3" id="chores-container">
+                    <!-- Rendered dynamically -->
+                </div>
+            </div>
+        </div>
+
+        <!-- PANEL 2: ENCOUNTER ARENA (RELAX PHASE) -->
+        <div id="panel-relax" class="hidden space-y-6">
+            <div class="p-5 rounded-2xl bg-slate-950 border border-slate-800 space-y-5">
+                
+                <!-- Target Difficulty & Challenge Config -->
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-4 border-b border-slate-800">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Threat Level Target</label>
+                        <select id="select-challenge" onchange="updateChallengeTarget()" class="bg-slate-900 border border-slate-800 text-xs text-slate-200 rounded-lg p-2 focus:outline-none focus:border-amber-500">
+                            <option value="slime">Dust Slime (DC 8)</option>
+                            <option value="grunt" selected>Laundry Golem (DC 10)</option>
+                            <option value="gate">Chaos Serpent (DC 12)</option>
+                            <option value="boss">Kitchen Overlord (DC 15)</option>
+                            <option value="custom">Custom Difficulty...</option>
+                        </select>
+                    </div>
+
+                    <div id="custom-challenge-box" class="hidden">
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Set Custom DC</label>
+                        <input type="number" id="input-custom-dc" min="1" max="99" value="10" onchange="updateChallengeTarget()" class="w-20 p-1.5 bg-slate-900 border border-slate-800 rounded text-xs text-slate-200 text-center">
+                    </div>
+
+                    <div class="text-right">
+                        <span class="text-[10px] uppercase font-mono text-slate-500 block">Target Score to Pass</span>
+                        <span class="text-2xl font-black text-amber-400" id="display-dc">10</span>
+                    </div>
+                </div>
+
+                <!-- Story Seed Prompt -->
+                <div>
+                    <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Story Narrative Seed</label>
+                    <input type="text" id="input-story-prompt" class="w-full p-2 text-xs bg-slate-900 border border-slate-800 rounded-lg text-slate-300 focus:outline-none focus:border-amber-500" placeholder="Describe the scene...">
+                </div>
+
+                <!-- Visual Dice Roll Arena -->
+                <div class="p-6 rounded-xl bg-slate-900/50 border border-slate-800/80 text-center space-y-4">
+                    <span class="text-[10px] uppercase font-mono tracking-widest text-slate-500 block">Active Combat Dice Pool</span>
+                    <div id="dice-visual-arena" class="flex flex-wrap items-center justify-center gap-3 min-h-[64px]">
+                        <!-- Dynamic Animated Dice Rendered Here -->
+                    </div>
+                </div>
+
+                <!-- Action Controls -->
+                <div class="flex items-center gap-3">
+                    <button id="btn-roll" onclick="executeDiceRoll()" class="flex-1 py-3 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-sm rounded-xl shadow-lg shadow-amber-500/10 transition">
+                        ⚔️ UNLEASH DICE POOL
+                    </button>
+                    <button id="btn-luck" onclick="executeLuckReroll()" class="px-4 py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl shadow transition disabled:opacity-40 disabled:pointer-events-none">
+                        🍀 Reroll (1)
+                    </button>
+                </div>
+            </div>
+
+            <!-- Campaign Combat Log & Quest History -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="p-4 rounded-xl bg-slate-950 border border-slate-800">
+                    <h4 class="font-bold text-xs text-slate-400 uppercase tracking-wider mb-2">📜 Encounter Chronicle</h4>
+                    <div id="campaign-log" class="h-40 overflow-y-auto text-xs font-mono space-y-1 pr-2">
+                        <!-- Dynamic Logs -->
+                    </div>
+                </div>
+
+                <div class="p-4 rounded-xl bg-slate-950 border border-slate-800">
+                    <h4 class="font-bold text-xs text-slate-400 uppercase tracking-wider mb-2">🏆 Quest History Timeline</h4>
+                    <div id="quest-history-timeline" class="h-40 overflow-y-auto space-y-2 pr-2">
+                        <!-- Dynamic History Cards -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- PANEL 3: INSTRUCTIONS & GAMEPLAY GUIDE -->
+        <div id="panel-instructions" class="hidden space-y-6">
+            <div class="p-5 rounded-2xl bg-slate-950 border border-slate-800 space-y-4">
+                <h2 class="text-lg font-bold text-amber-400 flex items-center gap-2">
+                    <span>📜 Chore RPG: 30-Minute Game Loop Guide</span>
+                </h2>
+                <p class="text-xs text-slate-400 leading-relaxed">
+                    Turn real-life household productivity into an epic tabletop campaign! Work together to complete tasks, stock up your dice inventory, and face monsters in the encounter phase.
+                </p>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+                    <div class="p-3.5 rounded-xl bg-slate-900/60 border border-slate-800 space-y-1.5">
+                        <span class="text-[10px] font-mono font-bold uppercase tracking-wider text-amber-400">Step 1 • Set Up Roster</span>
+                        <h4 class="font-bold text-sm text-slate-200">Set 4 Active Heroes</h4>
+                        <p class="text-xs text-slate-400">
+                            At the start of each 30-minute block, tap <strong>✏️</strong> on any slot to change names for visiting cousins or guests. The app saves every player in a permanent library so returning heroes can be re-selected in 2 clicks!
+                        </p>
+                    </div>
+
+                    <div class="p-3.5 rounded-xl bg-slate-900/60 border border-slate-800 space-y-1.5">
+                        <span class="text-[10px] font-mono font-bold uppercase tracking-wider text-indigo-400">Step 2 • The Work Phase</span>
+                        <h4 class="font-bold text-sm text-slate-200">Complete Household Quests</h4>
+                        <p class="text-xs text-slate-400">
+                            Spend 20–25 minutes clearing real-world chores. Checking off quests rewards your party with bonus dice (<code class="text-indigo-300">d4</code>, <code class="text-purple-300">d6</code>, or <code class="text-pink-300">d8</code>) for your total roll pool.
+                        </p>
+                    </div>
+
+                    <div class="p-3.5 rounded-xl bg-slate-900/60 border border-slate-800 space-y-1.5">
+                        <span class="text-[10px] font-mono font-bold uppercase tracking-wider text-purple-400">Step 3 • The Encounter Arena</span>
+                        <h4 class="font-bold text-sm text-slate-200">Face the Encounter</h4>
+                        <p class="text-xs text-slate-400">
+                            Switch to the Encounter Arena tab during rest time. Select your enemy Threat Level (DC Target), tag an MVP hero, and unleash your collected dice pool!
+                        </p>
+                    </div>
+
+                    <div class="p-3.5 rounded-xl bg-slate-900/60 border border-slate-800 space-y-1.5">
+                        <span class="text-[10px] font-mono font-bold uppercase tracking-wider text-emerald-400">Step 4 • Backup & Restore</span>
+                        <h4 class="font-bold text-sm text-slate-200">Export & Import Campaign</h4>
+                        <p class="text-xs text-slate-400">
+                            Use the <strong>📥 Export</strong> and <strong>📤 Import</strong> buttons in the header bar to back up your campaign file or move your saved progress between devices.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Dynamic Toast Notification Container -->
+    <div id="toast" class="fixed bottom-5 right-5 max-w-sm bg-slate-800 border border-slate-700 p-4 rounded-xl shadow-2xl transition-all duration-300 transform translate-y-20 opacity-0 pointer-events-none z-50 flex items-center space-x-3">
+        <span id="toast-icon" class="text-xl">📜</span>
+        <div id="toast-msg"></div>
+    </div>
+
+<script>
+    const STORAGE_KEY = 'chore_rpg_state_v6';
+
+    const defaultState = {
+        currentPhase: 'work',
+        isRolling: false,
+        dicePool: { d20: 1, d4: 0, d6: 0, d8: 0 },
+        luckPoints: 1,
+        activeDC: 10,
+        selectedMVP: null,
+        activeStoryPrompt: "The party stumbles upon an ancient stone doorway covered in glowing runes...",
+        activeSlots: [
+            { id: 1, name: "Player 1", class: "Knight", icon: "🛡️" },
+            { id: 2, name: "Player 2", class: "Ranger", icon: "🏹" },
+            { id: 3, name: "Player 3", class: "Wizard", icon: "🔮" },
+            { id: 4, name: "Player 4", class: "Rogue", icon: "🗡️" }
+        ],
+        heroLibrary: [
+            { name: "Player 1", class: "Knight", icon: "🛡️" },
+            { name: "Player 2", class: "Ranger", icon: "🏹" },
+            { name: "Player 3", class: "Wizard", icon: "🔮" },
+            { name: "Player 4", class: "Rogue", icon: "🗡️" }
+        ],
+        chores: [
+            { id: 1, fantasyName: "Scrub the Alchemist's Lab", realName: "Clean the Bathroom", rewardDice: "d8", completed: false },
+            { id: 2, fantasyName: "Sort the Armor Inventory", realName: "Fold & Put Away Laundry", rewardDice: "d6", completed: false },
+            { id: 3, fantasyName: "Banish the Dust Elementals", realName: "Vacuum the Living Room", rewardDice: "d6", completed: false },
+            { id: 4, fantasyName: "Purify the Grand Dining Hall", realName: "Clear & Wipe Kitchen Table", rewardDice: "d4", completed: false }
+        ],
+        questHistory: [],
+        lastRollData: null
+    };
+
+    let state = loadState();
+
+    window.onload = function() {
+        renderChores();
+        updateInventoryUI();
+        updateChallengeTarget();
+        setupInitialDiceArena();
+        renderQuestHistory();
+        renderActiveSlots();
+        renderMVPButtons();
+        
+        const promptInput = document.getElementById('input-story-prompt');
+        if (promptInput) promptInput.value = state.activeStoryPrompt || "";
+    };
+
+    function loadState() {
+        try {
+            const saved = localStorage.getItem(STORAGE_KEY);
+            if (!saved) return JSON.parse(JSON.stringify(defaultState));
+            const parsed = JSON.parse(saved);
+
+            return {
+                ...JSON.parse(JSON.stringify(defaultState)),
+                ...parsed,
+                dicePool: { ...defaultState.dicePool, ...(parsed.dicePool || {}) },
+                activeSlots: Array.isArray(parsed.activeSlots) && parsed.activeSlots.length === 4 ? parsed.activeSlots : defaultState.activeSlots,
+                heroLibrary: Array.isArray(parsed.heroLibrary) ? parsed.heroLibrary : defaultState.heroLibrary,
+                chores: Array.isArray(parsed.chores) ? parsed.chores : defaultState.chores,
+                questHistory: Array.isArray(parsed.questHistory) ? parsed.questHistory : [],
+                isRolling: false
+            };
+        } catch (e) {
+            return JSON.parse(JSON.stringify(defaultState));
+        }
+    }
+
+    function saveState() {
+        try {
+            const promptInput = document.getElementById('input-story-prompt');
+            if (promptInput) state.activeStoryPrompt = promptInput.value;
+
+            const payload = {
+                currentPhase: state.currentPhase,
+                dicePool: state.dicePool,
+                luckPoints: state.luckPoints,
+                activeDC: state.activeDC,
+                chores: state.chores,
+                activeSlots: state.activeSlots,
+                heroLibrary: state.heroLibrary,
+                questHistory: state.questHistory,
+                activeStoryPrompt: state.activeStoryPrompt
+            };
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+        } catch (e) {
+            console.error("Save state failure:", e);
+        }
+    }
+
+    // --- DATA IMPORT & EXPORT FEATURES ---
+    function exportSaveData() {
+        try {
+            const dateStr = new Date().toISOString().slice(0, 10);
+            const jsonStr = JSON.stringify(state, null, 2);
+            const blob = new Blob([jsonStr], { type: "application/json" });
+            const url = URL.createObjectURL(blob);
+            
+            const anchor = document.createElement('a');
+            anchor.href = url;
+            anchor.download = `ChoreRPG_Save_${dateStr}.json`;
+            document.body.appendChild(anchor);
+            anchor.click();
+            document.body.removeChild(anchor);
+            URL.revokeObjectURL(url);
+
+            showToast("💾 Backup Exported", "Campaign save file downloaded!");
+        } catch (err) {
+            console.error("Export Error:", err);
+            showToast("⚠️ Export Failed", "Unable to create backup file.");
+        }
+    }
+
+    function triggerImport() {
+        const fileInput = document.getElementById('import-file-input');
+        if (fileInput) {
+            fileInput.value = '';
+            fileInput.click();
+        }
+    }
+
+    function handleImportFile(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const parsed = JSON.parse(e.target.result);
+                if (!parsed || typeof parsed !== 'object') {
+                    throw new Error("Invalid file structure");
+                }
+
+                state = {
+                    ...JSON.parse(JSON.stringify(defaultState)),
+                    ...parsed,
+                    dicePool: { ...defaultState.dicePool, ...(parsed.dicePool || {}) },
+                    activeSlots: Array.isArray(parsed.activeSlots) && parsed.activeSlots.length === 4 ? parsed.activeSlots : defaultState.activeSlots,
+                    heroLibrary: Array.isArray(parsed.heroLibrary) ? parsed.heroLibrary : defaultState.heroLibrary,
+                    chores: Array.isArray(parsed.chores) ? parsed.chores : defaultState.chores,
+                    questHistory: Array.isArray(parsed.questHistory) ? parsed.questHistory : [],
+                    isRolling: false
+                };
+
+                saveState();
+
+                renderChores();
+                updateInventoryUI();
+                updateChallengeTarget();
+                setupInitialDiceArena();
+                renderQuestHistory();
+                renderActiveSlots();
+                renderMVPButtons();
+
+                const promptInput = document.getElementById('input-story-prompt');
+                if (promptInput) promptInput.value = state.activeStoryPrompt || "";
+
+                showToast("📥 Save Loaded!", "Campaign history and heroes restored.");
+            } catch (err) {
+                console.error("Import Error:", err);
+                showToast("❌ Import Failed", "Corrupted or invalid JSON file.");
+            }
+        };
+        reader.readAsText(file);
+    }
+
+    // --- THREE-WAY TAB NAVIGATION ---
+    function switchMode(mode) {
+        if (state.isRolling) return;
+        state.currentPhase = mode;
+
+        const btnWork = document.getElementById('btn-mode-work');
+        const btnRelax = document.getElementById('btn-mode-relax');
+        const btnInst = document.getElementById('btn-mode-instructions');
+
+        const panelWork = document.getElementById('panel-work');
+        const panelRelax = document.getElementById('panel-relax');
+        const panelInst = document.getElementById('panel-instructions');
+
+        [btnWork, btnRelax, btnInst].forEach(b => {
+            if (b) b.className = "px-4 py-2 rounded-lg font-bold text-xs transition text-slate-400 hover:text-slate-200";
+        });
+
+        if (panelWork) panelWork.classList.add('hidden');
+        if (panelRelax) panelRelax.classList.add('hidden');
+        if (panelInst) panelInst.classList.add('hidden');
+
+        if (mode === 'work') {
+            if (btnWork) btnWork.className = "px-4 py-2 rounded-lg font-bold text-xs transition bg-amber-500 text-slate-950 shadow";
+            if (panelWork) panelWork.classList.remove('hidden');
+        } else if (mode === 'relax') {
+            if (btnRelax) btnRelax.className = "px-4 py-2 rounded-lg font-bold text-xs transition bg-purple-500 text-slate-950 shadow";
+            if (panelRelax) panelRelax.classList.remove('hidden');
+            setupInitialDiceArena();
+        } else if (mode === 'instructions') {
+            if (btnInst) btnInst.className = "px-4 py-2 rounded-lg font-bold text-xs transition bg-indigo-500 text-white shadow";
+            if (panelInst) panelInst.classList.remove('hidden');
+        }
+
+        saveState();
+    }
+
+    // --- PLAYER ROSTER & MEMORY MANAGEMENT ---
+    function renderActiveSlots() {
+        const grid = document.getElementById('active-players-grid');
+        if (!grid) return;
+        grid.innerHTML = '';
+
+        state.activeSlots.forEach((slot) => {
+            const card = document.createElement('div');
+            card.className = "p-2.5 rounded-lg bg-slate-900 border border-slate-800 flex items-center justify-between text-xs space-x-2";
+            card.id = `player-slot-${slot.id}`;
+
+            let optionsHTML = `<option value="__custom__">+ Custom Hero...</option>`;
+            state.heroLibrary.forEach(hero => {
+                const isSelected = hero.name === slot.name;
+                const safeName = hero.name.replace(/"/g, '&quot;');
+                optionsHTML += `<option value="${safeName}" ${isSelected ? 'selected' : ''}>${hero.icon} ${hero.name} (${hero.class})</option>`;
+            });
+
+            card.innerHTML = `
+                <div class="flex-1 min-w-0" id="slot-display-${slot.id}">
+                    <div class="flex items-center space-x-1.5">
+                        <span class="font-bold text-slate-200 truncate">${slot.icon} ${slot.name}</span>
+                    </div>
+                    <span class="text-[10px] text-slate-400 block truncate">${slot.class}</span>
+                </div>
+                
+                <div class="flex items-center space-x-1">
+                    <select onchange="swapFromLibrary(${slot.id}, this.value)" class="text-[10px] bg-slate-950 border border-slate-800 text-slate-300 rounded px-1.5 py-1 max-w-[110px] focus:outline-none">
+                        ${optionsHTML}
+                    </select>
+
+                    <button onclick="enableSlotEdit(${slot.id})" title="Edit Player Name/Class" class="px-1.5 py-1 bg-slate-800 hover:bg-amber-500 hover:text-slate-950 border border-slate-700 rounded transition text-slate-300">
+                        ✏️
+                    </button>
+                </div>
+            `;
+            grid.appendChild(card);
+        });
+    }
+
+    function enableSlotEdit(slotId) {
+        const slot = state.activeSlots.find(s => s.id === slotId);
+        if (!slot) return;
+
+        const displayDiv = document.getElementById(`slot-display-${slotId}`);
+        if (!displayDiv) return;
+
+        displayDiv.innerHTML = `
+            <div class="space-y-1 my-0.5">
+                <input type="text" id="edit-name-${slotId}" value="${slot.name.replace(/"/g, '&quot;')}" placeholder="Hero Name" class="w-full text-xs p-1 bg-slate-950 border border-amber-500/50 rounded text-slate-100 focus:outline-none">
+                <input type="text" id="edit-class-${slotId}" value="${slot.class.replace(/"/g, '&quot;')}" placeholder="Class (e.g. Rogue)" class="w-full text-[11px] p-1 bg-slate-950 border border-slate-700 rounded text-slate-400 focus:outline-none">
+                <button onclick="saveSlotEdit(${slotId})" class="w-full mt-1 bg-amber-500 text-slate-950 font-bold text-[10px] py-0.5 rounded shadow">
+                    Save Hero
+                </button>
+            </div>
+        `;
+    }
+
+    function saveSlotEdit(slotId) {
+        const nameInput = document.getElementById(`edit-name-${slotId}`);
+        const classInput = document.getElementById(`edit-class-${slotId}`);
+        if (!nameInput) return;
+
+        const newName = nameInput.value.trim() || `Player ${slotId}`;
+        const newClass = classInput.value.trim() || "Adventurer";
+
+        const slot = state.activeSlots.find(s => s.id === slotId);
+        if (slot) {
+            slot.name = newName;
+            slot.class = newClass;
+        }
+
+        const existingInLib = state.heroLibrary.find(h => h.name.toLowerCase() === newName.toLowerCase());
+        if (!existingInLib) {
+            const icons = ["🛡️", "🏹", "🔮", "🗡️", "⚡", "🐉", "⚔️", "🌟"];
+            const randomIcon = slot ? slot.icon : icons[Math.floor(Math.random() * icons.length)];
+            state.heroLibrary.push({ name: newName, class: newClass, icon: randomIcon });
+        } else {
+            existingInLib.class = newClass;
+        }
+
+        renderActiveSlots();
+        renderMVPButtons();
+        saveState();
+        showToast("👤 Hero Saved!", `Updated Slot ${slotId} to ${newName}.`);
+    }
+
+    function swapFromLibrary(slotId, selectedName) {
+        if (selectedName === '__custom__') {
+            enableSlotEdit(slotId);
+            return;
+        }
+
+        const libraryHero = state.heroLibrary.find(h => h.name === selectedName);
+        const slot = state.activeSlots.find(s => s.id === slotId);
+
+        if (libraryHero && slot) {
+            slot.name = libraryHero.name;
+            slot.class = libraryHero.class;
+            slot.icon = libraryHero.icon;
+            renderActiveSlots();
+            renderMVPButtons();
+            saveState();
+            showToast("🔄 Roster Updated", `${slot.name} active for this block.`);
+        }
+    }
+
+    function renderMVPButtons() {
+        const container = document.getElementById('player-mvp-selectors');
+        if (!container) return;
+        container.innerHTML = '';
+
+        state.activeSlots.forEach(p => {
+            const btn = document.createElement('button');
+            const isSelected = state.selectedMVP === p.name;
+
+            btn.className = `px-2 py-1.5 rounded-lg border text-xs text-left transition flex flex-col ${
+                isSelected 
+                    ? 'bg-amber-500 border-amber-400 text-slate-950 font-bold shadow-md shadow-amber-500/20' 
+                    : 'bg-slate-900 border-slate-800 text-slate-300 hover:border-amber-500/40'
+            }`;
+            
+            btn.onclick = () => selectMVP(p.name);
+            btn.innerHTML = `
+                <span class="truncate font-medium">${p.icon} ${p.name}</span>
+                <span class="text-[10px] opacity-70 font-normal truncate">${p.class}</span>
+            `;
+            container.appendChild(btn);
+        });
+    }
+
+    function selectMVP(playerName) {
+        if (state.isRolling) return;
+        state.selectedMVP = state.selectedMVP === playerName ? null : playerName;
+        renderMVPButtons();
+        saveState();
+    }
+
+    // --- GAME ENGINE & REROLLS ---
+    function executeLuckReroll() {
+        if (state.isRolling || state.luckPoints <= 0 || !state.lastRollData) return;
+
+        state.luckPoints--;
+        state.isRolling = true;
+        
+        showToast("🍀 Luck Spent!", "Rerolling d20 base die...");
+        
+        const arena = document.getElementById('dice-visual-arena');
+        if (arena) arena.innerHTML = '';
+
+        setTimeout(() => {
+            state.lastRollData.d20 = Math.floor(Math.random() * 20) + 1;
+            state.isRolling = false;
+
+            let grandTotal = state.lastRollData.d20;
+            if (arena) {
+                arena.innerHTML = '';
+                renderFinalDieValue(arena, 'd20', state.lastRollData.d20, 'border-amber-500 bg-amber-500 text-slate-950 shadow-amber-500/20');
+                state.lastRollData.d4.forEach(val => { grandTotal += val; renderFinalDieValue(arena, 'd4', val, 'border-indigo-500 bg-indigo-600 text-white'); });
+                state.lastRollData.d6.forEach(val => { grandTotal += val; renderFinalDieValue(arena, 'd6', val, 'border-purple-500 bg-purple-600 text-white'); });
+                state.lastRollData.d8.forEach(val => { grandTotal += val; renderFinalDieValue(arena, 'd8', val, 'border-pink-500 bg-pink-600 text-white'); });
+            }
+
+            const isSuccess = grandTotal >= state.activeDC;
+            logToCampaign(`🍀 LUCK REROLL: New Total ${grandTotal} vs DC ${state.activeDC}. (${isSuccess ? 'VICTORY' : 'DEFEAT'})`);
+
+            if (state.questHistory.length > 0) {
+                state.questHistory[0].score = grandTotal;
+                state.questHistory[0].passed = isSuccess;
+                renderQuestHistory();
+            }
+            
+            updateInventoryUI();
+            saveState();
+        }, 500);
+    }
+
+    function renderChores() {
+        const container = document.getElementById('chores-container');
+        if (!container) return;
+        container.innerHTML = '';
+
+        state.chores.forEach(chore => {
+            const card = document.createElement('div');
+            card.className = `p-4 rounded-xl border transition-all duration-200 ${chore.completed ? 'bg-slate-950/60 border-slate-800 opacity-60' : 'bg-slate-950 border-slate-800 hover:border-slate-700'}`;
+            
+            let diceColor = 'text-indigo-400';
+            if (chore.rewardDice === 'd6') diceColor = 'text-purple-400';
+            if (chore.rewardDice === 'd8') diceColor = 'text-pink-400';
+
+            card.innerHTML = `
+                <div class="flex justify-between items-start space-x-2">
+                    <div>
+                        <h4 class="font-bold text-sm tracking-wide ${chore.completed ? 'line-through text-slate-500' : 'text-slate-200'}">${chore.fantasyName}</h4>
+                        <p class="text-xs text-slate-500 italic mt-0.5">Real World: ${chore.realName}</p>
+                        <span class="inline-block mt-2 text-[10px] uppercase font-mono tracking-wider font-semibold px-2 py-0.5 rounded bg-slate-900 border border-slate-800 ${diceColor}">
+                            🎁 Loot: +1${chore.rewardDice} Pool
+                        </span>
+                    </div>
+                    <button onclick="toggleChoreComplete(${chore.id})" class="flex-shrink-0 w-8 h-8 rounded-lg border flex items-center justify-center transition-all ${chore.completed ? 'bg-amber-500 border-amber-600 text-slate-950' : 'border-slate-700 hover:border-slate-500 text-transparent hover:text-slate-600'}">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                    </button>
+                </div>
+            `;
+            container.appendChild(card);
+        });
+    }
+
+    function toggleChoreComplete(id) {
+        if (state.isRolling) return;
+        const chore = state.chores.find(c => c.id === id);
+        if (!chore) return;
+
+        chore.completed = !chore.completed;
+        if (chore.completed) {
+            state.dicePool[chore.rewardDice]++;
+            showToast("⚔️ Quest Finished!", `Earned +1${chore.rewardDice} for "${chore.fantasyName}"`);
+            logToCampaign(`Loot secured: Completed "${chore.fantasyName}" -> +1${chore.rewardDice}.`);
+        } else {
+            state.dicePool[chore.rewardDice] = Math.max(0, state.dicePool[chore.rewardDice] - 1);
+            logToCampaign(`Chore unchecked: Removed 1${chore.rewardDice}.`);
+        }
+        
+        renderChores();
+        updateInventoryUI();
+        if (state.currentPhase === 'relax') setupInitialDiceArena();
+        saveState();
+    }
+
+    function resetChoresForNewSet() {
+        if (state.isRolling) return;
+        state.chores.forEach(c => c.completed = false);
+        renderChores();
+        saveState();
+        showToast("🔄 Quest Board Cleared", "Ready for the next 30-minute productivity block!");
+    }
+
+    function updateInventoryUI() {
+        const d20 = document.getElementById('inventory-d20');
+        const d4 = document.getElementById('inventory-d4');
+        const d6 = document.getElementById('inventory-d6');
+        const d8 = document.getElementById('inventory-d8');
+        const luck = document.getElementById('inventory-luck');
+        const luckBtn = document.getElementById('btn-luck');
+
+        if (d20) d20.innerText = state.dicePool.d20;
+        if (d4) d4.innerText = state.dicePool.d4;
+        if (d6) d6.innerText = state.dicePool.d6;
+        if (d8) d8.innerText = state.dicePool.d8;
+        if (luck) luck.innerText = state.luckPoints;
+
+        if (luckBtn) {
+            luckBtn.innerText = `🍀 Reroll (${state.luckPoints})`;
+            luckBtn.disabled = state.luckPoints <= 0 || !state.lastRollData || state.isRolling;
+        }
+    }
+
+    function updateChallengeTarget() {
+        const threatSelect = document.getElementById('select-challenge');
+        const customBox = document.getElementById('custom-challenge-box');
+        if (!threatSelect) return;
+        
+        if (threatSelect.value === 'custom') {
+            if (customBox) customBox.classList.remove('hidden');
+            const customInput = document.getElementById('input-custom-dc');
+            const rawVal = customInput ? parseInt(customInput.value) : 10;
+            state.activeDC = isNaN(rawVal) ? 10 : Math.max(1, rawVal);
+        } else {
+            if (customBox) customBox.classList.add('hidden');
+            const dcMap = { slime: 8, grunt: 10, gate: 12, boss: 15 };
+            state.activeDC = dcMap[threatSelect.value] || 10;
+        }
+
+        const displayDC = document.getElementById('display-dc');
+        if (displayDC) displayDC.innerText = state.activeDC;
+        saveState();
+    }
+
+    function setupInitialDiceArena() {
+        const arena = document.getElementById('dice-visual-arena');
+        if (!arena) return;
+        arena.innerHTML = '';
+
+        createStaticDiceBadge(arena, 'd20', 'bg-amber-600/30 border-amber-500 text-amber-300');
+        for (let i = 0; i < state.dicePool.d4; i++) createStaticDiceBadge(arena, 'd4', 'bg-indigo-600/20 border-indigo-500 text-indigo-300');
+        for (let i = 0; i < state.dicePool.d6; i++) createStaticDiceBadge(arena, 'd6', 'bg-purple-600/20 border-purple-500 text-purple-300');
+        for (let i = 0; i < state.dicePool.d8; i++) createStaticDiceBadge(arena, 'd8', 'bg-pink-600/20 border-pink-500 text-pink-300');
+    }
+
+    function createStaticDiceBadge(container, label, colorClasses) {
+        const badge = document.createElement('div');
+        badge.className = `w-14 h-14 border rounded-xl flex flex-col items-center justify-center font-bold text-xs uppercase shadow ${colorClasses}`;
+        badge.innerHTML = `<span>${label}</span><span class="text-xs opacity-40 font-normal mt-0.5">ready</span>`;
+        container.appendChild(badge);
+    }
+
+    function executeDiceRoll() {
+        if (state.isRolling) return;
+        state.isRolling = true;
+
+        const rollButton = document.getElementById('btn-roll');
+        const luckButton = document.getElementById('btn-luck');
+        const arena = document.getElementById('dice-visual-arena');
+        const promptInput = document.getElementById('input-story-prompt');
+        
+        if (rollButton) rollButton.disabled = true;
+        if (luckButton) luckButton.disabled = true;
+        if (arena) arena.innerHTML = '';
+
+        let resultsTrace = {
+            d20: Math.floor(Math.random() * 20) + 1,
+            d4: Array.from({length: state.dicePool.d4}, () => Math.floor(Math.random() * 4) + 1),
+            d6: Array.from({length: state.dicePool.d6}, () => Math.floor(Math.random() * 6) + 1),
+            d8: Array.from({length: state.dicePool.d8}, () => Math.floor(Math.random() * 8) + 1)
+        };
+
+        if (arena) {
+            appendAnimatedDice(arena, 'd20', 'border-amber-500 bg-amber-950/40 text-amber-400');
+            resultsTrace.d4.forEach(() => appendAnimatedDice(arena, 'd4', 'border-indigo-500 bg-indigo-950/40 text-indigo-400'));
+            resultsTrace.d6.forEach(() => appendAnimatedDice(arena, 'd6', 'border-purple-500 bg-purple-950/40 text-purple-400'));
+            resultsTrace.d8.forEach(() => appendAnimatedDice(arena, 'd8', 'border-pink-500 bg-pink-950/40 text-pink-400'));
+        }
+
+        setTimeout(() => {
+            state.isRolling = false;
+            if (rollButton) rollButton.disabled = false;
+            state.lastRollData = resultsTrace;
+            
+            if (arena) arena.innerHTML = '';
+            let grandTotal = resultsTrace.d20;
+
+            if (arena) {
+                renderFinalDieValue(arena, 'd20', resultsTrace.d20, 'border-amber-500 bg-amber-500 text-slate-950 shadow-amber-500/20');
+                resultsTrace.d4.forEach(val => { grandTotal += val; renderFinalDieValue(arena, 'd4', val, 'border-indigo-500 bg-indigo-600 text-white shadow-indigo-500/20'); });
+                resultsTrace.d6.forEach(val => { grandTotal += val; renderFinalDieValue(arena, 'd6', val, 'border-purple-500 bg-purple-600 text-white shadow-purple-500/20'); });
+                resultsTrace.d8.forEach(val => { grandTotal += val; renderFinalDieValue(arena, 'd8', val, 'border-pink-500 bg-pink-600 text-white shadow-pink-500/20'); });
+            }
+
+            const threatSelect = document.getElementById('select-challenge');
+            const threatName = threatSelect ? threatSelect.options[threatSelect.selectedIndex].text.split('(')[0].trim() : 'Encounter';
+            const isSuccess = grandTotal >= state.activeDC;
+
+            const mvpPlayer = state.activeSlots.find(p => p.name === state.selectedMVP);
+            const mvpLabel = mvpPlayer ? `${mvpPlayer.name} the ${mvpPlayer.class}` : 'Entire Active Party';
+
+            const historyEntry = {
+                id: Date.now(),
+                timestamp: new Date().toLocaleDateString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }),
+                threat: threatName,
+                dc: state.activeDC,
+                score: grandTotal,
+                passed: isSuccess,
+                mvp: mvpLabel,
+                storyPrompt: promptInput ? promptInput.value : "Standard encounter clearance."
+            };
+
+            state.questHistory.unshift(historyEntry);
+
+            if (isSuccess) {
+                logToCampaign(`🔥 COMBAT WIN: Total ${grandTotal} vs DC ${state.activeDC}. MVP: ${mvpLabel}!`);
+                showToast("🎉 Victory Achievement!", "Encounter conquered!");
+                state.dicePool.d4 = 0;
+                state.dicePool.d6 = 0;
+                state.dicePool.d8 = 0;
+            } else {
+                logToCampaign(`❌ DEFEAT: Rolled ${grandTotal} vs DC ${state.activeDC}.`);
+                showToast("💀 Defeat Encountered", "Score fell short.");
+            }
+
+            state.selectedMVP = null;
+            renderMVPButtons();
+            renderQuestHistory();
+            updateInventoryUI();
+            saveState();
+        }, 650);
+    }
+
+    function appendAnimatedDice(container, type, classes) {
+        const element = document.createElement('div');
+        element.className = `w-14 h-14 border rounded-xl flex items-center justify-center font-black text-sm rolling ${classes}`;
+        element.innerText = type;
+        container.appendChild(element);
+    }
+
+    function renderFinalDieValue(container, label, value, classes) {
+        const element = document.createElement('div');
+        element.className = `w-14 h-14 border rounded-xl flex flex-col items-center justify-center font-extrabold text-lg shadow-lg ${classes}`;
+        element.innerHTML = `<span class="text-xs font-mono font-normal opacity-60 leading-none">${label}</span><span class="mt-0.5 leading-none">${value}</span>`;
+        container.appendChild(element);
+    }
+
+    function renderQuestHistory() {
+        const container = document.getElementById('quest-history-timeline');
+        if (!container) return;
+
+        if (state.questHistory.length === 0) {
+            container.innerHTML = '<div class="text-slate-500 italic py-2">No encounters logged yet.</div>';
+            return;
+        }
+
+        container.innerHTML = '';
+        state.questHistory.forEach(entry => {
+            const card = document.createElement('div');
+            card.className = `p-3 rounded-lg border ${entry.passed ? 'border-emerald-900/40 bg-emerald-950/20' : 'border-rose-900/40 bg-rose-950/20'}`;
+            card.innerHTML = `
+                <div class="flex justify-between items-start mb-1">
+                    <span class="font-bold text-xs ${entry.passed ? 'text-emerald-400' : 'text-rose-400'}">
+                        ${entry.passed ? '⚔️ VICTORY:' : '💀 DEFEAT:'} ${entry.threat} (DC ${entry.dc})
+                    </span>
+                    <span class="text-[10px] text-slate-500 font-mono">${entry.timestamp}</span>
+                </div>
+                <p class="text-slate-300 italic text-[11px] mb-2 font-serif">"${entry.storyPrompt}"</p>
+                <div class="flex justify-between items-center text-[10px] text-slate-400 pt-1 border-t border-slate-800/50">
+                    <span>Final Roll: <strong class="text-slate-200">${entry.score}</strong></span>
+                    <span>Standout Hero: <strong class="text-amber-400">${entry.mvp}</strong></span>
+                </div>
+            `;
+            container.appendChild(card);
+        });
+    }
+
+    function logToCampaign(text) {
+        const logger = document.getElementById('campaign-log');
+        if (!logger) return;
+        const block = document.createElement('div');
+        const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        block.className = "py-1.5 text-slate-300 transition hover:bg-slate-900/40";
+        block.innerHTML = `<span class="text-amber-500 font-semibold mr-1.5">[${time}]</span> ${text}`;
+        logger.appendChild(block);
+        logger.scrollTop = logger.scrollHeight;
+    }
+
+    function showToast(title, body) {
+        let el = document.getElementById('toast');
+        if (!el) {
+            el = document.createElement('div');
+            el.id = 'toast';
+            document.body.appendChild(el);
+        }
+
+        const iconEl = document.getElementById('toast-icon');
+        const msgEl = document.getElementById('toast-msg');
+        if (iconEl) iconEl.innerText = title.includes("Victory") || title.includes("Finished") || title.includes("Loaded") || title.includes("Exported") ? "⭐" : "📜";
+        if (msgEl) msgEl.innerHTML = `<strong class="text-slate-100">${title}</strong> <span class="block text-xs text-slate-400 mt-0.5">${body}</span>`;
+        
+        el.className = "fixed bottom-5 right-5 max-w-sm bg-slate-800 border border-slate-700 p-4 rounded-xl shadow-2xl transition-all duration-300 transform translate-y-0 opacity-100 z-50 flex items-center space-x-3";
+        setTimeout(() => {
+            el.className = "fixed bottom-5 right-5 max-w-sm bg-slate-800 border border-slate-700 p-4 rounded-xl shadow-2xl transition-all duration-300 transform translate-y-20 opacity-0 pointer-events-none z-50 flex items-center space-x-3";
+        }, 3000);
+    }
+</script>
+</body>
+</html>
