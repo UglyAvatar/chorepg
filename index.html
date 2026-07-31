@@ -164,81 +164,80 @@
             </div>
         </div>
 
-        <!-- PANEL 2: ENCOUNTER ARENA (RELAX PHASE) -->
-        <div id="panel-relax" class="hidden space-y-6">
-            <div class="p-5 rounded-2xl bg-slate-950 border border-slate-800 space-y-5">
-                
-                <!-- Target Difficulty & Challenge Config -->
-                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-4 border-b border-slate-800">
-                    <div>
-                        <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Threat Level Target</label>
-                        <select id="select-challenge" onchange="updateChallengeTarget()" class="bg-slate-900 border border-slate-800 text-xs text-slate-200 rounded-lg p-2 focus:outline-none focus:border-amber-500">
-                            <option value="slime">Dust Slime (DC 8)</option>
-                            <option value="grunt" selected>Laundry Golem (DC 10)</option>
-                            <option value="gate">Chaos Serpent (DC 12)</option>
-                            <option value="boss">Kitchen Overlord (DC 15)</option>
-                            <option value="custom">Custom Difficulty...</option>
-                        </select>
-                    </div>
+        <!-- ENCOUNTER ARENA & NARRATIVE COMBAT PANEL -->
+    <div class="p-6 rounded-2xl bg-slate-950 border border-slate-800 space-y-6" id="encounter-arena-panel">
+        <div class="flex items-center justify-between border-b border-slate-800/80 pb-4">
+            <div>
+                <h3 class="text-base font-bold text-amber-400 flex items-center gap-2">
+                    <span>⚔️ Encounter Arena & Narrative Combat</span>
+                </h3>
+                <p class="text-xs text-slate-400">Select a quest from your board to set the encounter target, generate an immersive AI story, and record player rolls.</p>
+            </div>
+            <div class="text-right">
+                <span class="text-[10px] font-mono uppercase tracking-wider text-slate-500 block">Target DC to Pass</span>
+                <span id="encounter-dc-display" class="text-2xl font-black text-amber-400">10</span>
+            </div>
+        </div>
 
-                    <div id="custom-challenge-box" class="hidden">
-                        <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Set Custom DC</label>
-                        <input type="number" id="input-custom-dc" min="1" max="99" value="10" onchange="updateChallengeTarget()" class="w-20 p-1.5 bg-slate-900 border border-slate-800 rounded text-xs text-slate-200 text-center">
-                    </div>
+        <!-- Quest Board Selector & AI Story Generator -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+            <div class="space-y-1.5 md:col-span-2">
+                <label class="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-400">Select Active Quest Target</label>
+                <select id="encounter-target" onchange="updateEncounterDetails()" class="w-full px-3 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-200 text-xs focus:outline-none focus:border-amber-500/50">
+                    <!-- Populated dynamically from quest board chores -->
+                </select>
+            </div>
+            <div>
+                <button onclick="generateRichEncounterStory()" class="w-full px-4 py-2.5 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 text-amber-300 text-xs font-medium flex items-center justify-center gap-2 transition-colors">
+                    ✨ Generate Immersive AI Story
+                </button>
+            </div>
+        </div>
 
-                    <div class="text-right">
-                        <span class="text-[10px] uppercase font-mono text-slate-500 block">Target Score to Pass</span>
-                        <span class="text-2xl font-black text-amber-400" id="display-dc">10</span>
-                    </div>
-                </div>
+        <!-- Rich Descriptive Story Narrative Box -->
+        <div class="space-y-1.5">
+            <label class="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-400">Scene Narrative & Buildup</label>
+            <textarea id="encounter-story" rows="4" placeholder="Select a quest and click generate to create an immersive scene..." class="w-full p-4 rounded-xl bg-slate-900 border border-slate-800 text-slate-200 text-xs leading-relaxed focus:outline-none focus:border-amber-500/50 resize-y"></textarea>
+        </div>
 
-                <!-- Story Seed Prompt -->
-                <div>
-                    <div class="flex justify-between items-center mb-1">
-                        <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider">Story Narrative Seed</label>
-                        <button onclick="generateGeminiStory()" class="text-[10px] text-amber-400 hover:text-amber-300 flex items-center gap-1 transition-colors cursor-pointer" title="Generate a random story hook using Google Gemini">
-                            ✨ Generate AI Hook
-                        </button>
-                    </div>
-                    <input type="text" id="input-story-prompt" oninput="state.activeStoryPrompt = this.value; saveState();" class="w-full p-2 text-xs bg-slate-900 border border-slate-800 rounded-lg text-slate-300 focus:outline-none focus:border-amber-500" placeholder="Type your own story or click Generate AI Hook...">
-                </div>
-
-                <!-- Visual Dice Roll Arena -->
-                <div class="p-6 rounded-xl bg-slate-900/50 border border-slate-800/80 text-center space-y-4">
-                    <span class="text-[10px] uppercase font-mono tracking-widest text-slate-500 block">Active Combat Dice Pool</span>
-                    <div id="dice-visual-arena" class="flex flex-wrap items-center justify-center gap-3 min-h-[64px]">
-                        <!-- Dynamic Animated Dice Rendered Here -->
-                    </div>
-                </div>
-
-                <!-- Action Controls -->
-                <div class="flex items-center gap-3">
-                    <button id="btn-roll" onclick="executeDiceRoll()" class="flex-1 py-3 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-sm rounded-xl shadow-lg shadow-amber-500/10 transition">
-                        ⚔️ UNLEASH DICE POOL
-                    </button>
-                    <button id="btn-luck" onclick="executeLuckReroll()" class="px-4 py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl shadow transition disabled:opacity-40 disabled:pointer-events-none">
-                        🍀 Reroll (1)
-                    </button>
+        <!-- Digital Dice Roller & Quick Roll Section -->
+        <div class="p-4 rounded-xl bg-slate-900/60 border border-slate-800 space-y-3">
+            <div class="flex items-center justify-between">
+                <span class="text-xs font-bold text-slate-300 flex items-center gap-2">🎲 Digital Dice Roller (For Players Without Dice)</span>
+                <div class="flex gap-2">
+                    <button onclick="rollVirtualDice('d20')" class="px-3 py-1.5 rounded-lg bg-indigo-600/20 hover:bg-indigo-600/30 border border-indigo-500/40 text-indigo-300 text-xs font-bold transition-colors">Roll d20</button>
+                    <button onclick="rollVirtualDice('d6')" class="px-3 py-1.5 rounded-lg bg-pink-600/20 hover:bg-pink-600/30 border border-pink-500/40 text-pink-300 text-xs font-bold transition-colors">Roll Pool (+1d6)</button>
                 </div>
             </div>
+            <div id="virtual-dice-output" class="text-xs font-mono text-slate-400 bg-slate-950 p-2.5 rounded-lg border border-slate-800/80">
+                Click a digital dice button above to simulate a roll instantly.
+            </div>
+        </div>
 
-            <!-- Campaign Combat Log & Quest History -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div class="p-4 rounded-xl bg-slate-950 border border-slate-800">
-                    <h4 class="font-bold text-xs text-slate-400 uppercase tracking-wider mb-2">📜 Encounter Chronicle</h4>
-                    <div id="campaign-log" class="h-40 overflow-y-auto text-xs font-mono space-y-1 pr-2">
-                        <!-- Dynamic Logs -->
+        <!-- Per-Player Dice Outcomes Input Section -->
+        <div class="space-y-3">
+            <div class="flex items-center justify-between">
+                <h4 class="text-xs font-bold text-slate-300 uppercase tracking-wider">👥 Player Roll Outcomes</h4>
+                <button onclick="addPlayerRollRow()" class="text-[11px] px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-800 text-slate-300 hover:text-amber-400 transition">+ Add Player</button>
+            </div>
+            <div id="player-rolls-container" class="space-y-2">
+                <!-- Dynamically rendered player roll rows -->
+                <div class="flex items-center gap-3 p-3 rounded-xl bg-slate-900 border border-slate-800 player-roll-row">
+                    <input type="text" placeholder="Player Name" value="Player 1" class="w-1/3 px-3 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-slate-200 text-xs focus:outline-none focus:border-amber-500/50 player-name-input">
+                    <div class="flex-1 flex items-center gap-2">
+                        <label class="text-[10px] font-mono text-slate-400">Total Roll:</label>
+                        <input type="number" placeholder="e.g. 12" class="w-24 px-3 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-slate-200 text-xs focus:outline-none focus:border-amber-500/50 player-score-input">
                     </div>
-                </div>
-
-                <div class="p-4 rounded-xl bg-slate-950 border border-slate-800">
-                    <h4 class="font-bold text-xs text-slate-400 uppercase tracking-wider mb-2">🏆 Quest History Timeline</h4>
-                    <div id="quest-history-timeline" class="h-40 overflow-y-auto space-y-2 pr-2">
-                        <!-- Dynamic History Cards -->
-                    </div>
+                    <button onclick="this.closest('.player-roll-row').remove()" class="text-slate-500 hover:text-rose-400 text-xs px-2">✕</button>
                 </div>
             </div>
         </div>
+
+        <!-- Resolve Encounter Button -->
+        <button onclick="resolveEncounterOutcome()" class="w-full py-3.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-400 hover:from-amber-400 hover:to-amber-300 text-slate-950 font-black text-xs uppercase tracking-wider transition-all shadow-lg shadow-amber-500/20">
+            ⚔️ Resolve Encounter & Check Party Victory
+        </button>
+    </div>
 
         <!-- PANEL 3: INSTRUCTIONS & GAMEPLAY GUIDE -->
     <div id="panel-instructions" class="hidden space-y-6">
@@ -1254,50 +1253,184 @@ function resetChoresForNewSet() {
     }
 }
 
-// Robust Quest Board Renderer ensuring individual lock checkboxes and correct property mapping
-function renderQuestBoard() {
-    const container = document.getElementById('chores-container');
-    if (!container) return;
+// Populate Encounter Arena dropdown from active Quest Board chores
+function initEncounterArena() {
+    const encounterSelect = document.getElementById('encounter-target');
+    if (!encounterSelect) return;
 
     if (!state.chores || state.chores.length === 0) {
-        container.innerHTML = '<div class="col-span-full text-center py-6 text-slate-500 text-xs italic">No active quests on the board. Add custom quests or reset to generate new ones!</div>';
+        encounterSelect.innerHTML = '<option value="">No active quests on board! Add quests first.</option>';
         return;
     }
 
-    container.innerHTML = state.chores.map((chore, index) => {
-        const titleText = chore.title || chore.name || "Unnamed Quest";
-        const descText = chore.description || chore.realWorld || chore.real || "No description";
-        const lootText = chore.loot || chore.dice || "d6";
-        const isChecked = chore.completed ? 'checked' : '';
-        const isLocked = chore.locked ? 'checked' : '';
+    encounterSelect.innerHTML = state.chores.map((chore, idx) => {
+        const title = chore.title || chore.name || "Unnamed Quest";
+        const real = chore.description || chore.realWorld || chore.real || "Chore";
+        const loot = (chore.loot || chore.dice || "d6").toLowerCase();
+        
+        let baseDc = 10;
+        if (loot.includes('d4')) baseDc = 8;
+        if (loot.includes('d6')) baseDc = 10;
+        if (loot.includes('d8')) baseDc = 12;
+        if (loot.includes('d10')) baseDc = 14;
 
-        return `
-            <div class="p-4 rounded-2xl bg-slate-900/80 border ${chore.completed ? 'border-emerald-500/30 opacity-60' : 'border-slate-800'} flex flex-col justify-between space-y-3 relative group transition-all">
-                <div class="flex items-start justify-between gap-3">
-                    <div class="space-y-1">
-                        <h4 class="text-xs font-bold text-slate-200">${titleText}</h4>
-                        <p class="text-[11px] text-slate-400 italic">Real World: ${descText}</p>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <!-- Individual Card Save/Lock Checkbox -->
-                        <label class="flex items-center gap-1 cursor-pointer" title="Save/Lock quest (ignores reset)">
-                            <input type="checkbox" ${isLocked} onchange="toggleChoreLock('${chore.id}', this.checked)" class="rounded bg-slate-950 border-slate-700 text-amber-500 focus:ring-0 w-3 h-3 cursor-pointer">
-                            <span class="text-[10px] text-slate-500">🔒 Save</span>
-                        </label>
-                        <!-- Completion Checkbox -->
-                        <input type="checkbox" ${isChecked} onchange="toggleChoreCompletion('${chore.id}', this.checked)" class="rounded bg-slate-950 border-slate-700 text-emerald-500 focus:ring-0 w-4 h-4 cursor-pointer">
-                    </div>
-                </div>
-                <div class="flex items-center justify-between pt-2 border-t border-slate-800/60">
-                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-pink-500/10 border border-pink-500/20 text-pink-400 text-[10px] font-mono font-bold">
-                        🎁 LOOT: +1${lootText.toUpperCase()} POOL
-                    </span>
-                    ${chore.custom ? '<span class="text-[9px] font-mono text-amber-400/80 bg-amber-500/10 px-1.5 py-0.5 rounded">CUSTOM</span>' : ''}
-                </div>
-            </div>
-        `;
+        return `<option value="${idx}" data-dc="${baseDc}" data-title="${title}" data-real="${real}">
+            ${title} (${real}) [DC ${baseDc}]
+        </option>`;
     }).join('');
+
+    updateEncounterDetails();
 }
+
+// Update Target DC display and set initial prompt text based on selected chore
+function updateEncounterDetails() {
+    const encounterSelect = document.getElementById('encounter-target');
+    const dcDisplay = document.getElementById('encounter-dc-display');
+    const storyInput = document.getElementById('encounter-story');
+    
+    if (!encounterSelect || !encounterSelect.selectedOptions.length) return;
+
+    const selectedOption = encounterSelect.selectedOptions[0];
+    const dc = selectedOption.getAttribute('data-dc') || '10';
+    const title = selectedOption.getAttribute('data-title') || 'Quest';
+    const real = selectedOption.getAttribute('data-real') || 'chore';
+
+    if (dcDisplay) dcDisplay.textContent = dc;
+    if (storyInput && !storyInput.value.trim()) {
+        storyInput.value = `The realm trembles as the party confronts "${title}", stemming from the dreaded real-world task of ${real}. Tensions run high as heroes prepare their equipment and brace for the challenge ahead...`;
+    }
+}
+
+// Generate a rich, immersive 2-3 paragraph encounter story via Gemini using the quest board chore
+async function generateRichEncounterStory() {
+    let apiKey = localStorage.getItem('gemini_api_key');
+    if (!apiKey) {
+        apiKey = prompt("Enter your Google Gemini API Key for rich narrative generation:\n\nGet a free key instantly at aistudio.google.com");
+        if (!apiKey) return;
+        localStorage.setItem('gemini_api_key', apiKey.replace(/\s+/g, ''));
+    }
+
+    const encounterSelect = document.getElementById('encounter-target');
+    const storyInput = document.getElementById('encounter-story');
+    
+    if (!encounterSelect || !encounterSelect.selectedOptions.length || !encounterSelect.value) {
+        alert("Please select a valid quest target from the dropdown first!");
+        return;
+    }
+
+    const selectedOption = encounterSelect.selectedOptions[0];
+    const title = selectedOption.getAttribute('data-title') || 'Quest';
+    const real = selectedOption.getAttribute('data-real') || 'chore';
+
+    if (storyInput) storyInput.value = "✨ Conjuring a rich, immersive fantasy encounter scene...";
+
+    try {
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=${apiKey}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                contents: [{
+                    parts: [{ text: `Write a rich, engaging, 2-to-3 paragraph fantasy RPG encounter scene and backstory based on the household chore "${real}" named "${title}". Vividly set up the scene, what happened, the atmospheric buildup, and why the party must conquer it before chaos ensues. Make it exciting, atmospheric, and descriptive.` }]
+                }]
+            })
+        });
+
+        const data = await response.json();
+        const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+        
+        if (rawText && storyInput) {
+            storyInput.value = rawText.trim().replace(/^["']|["']$/g, '');
+        } else {
+            throw new Error("Invalid response format");
+        }
+    } catch (err) {
+        console.error("AI Story Generation Error:", err);
+        localStorage.removeItem('gemini_api_key');
+        if (storyInput) {
+            storyInput.value = `The dark forces of "${title}" have manifested around the household task of ${real}. Shadows lengthen across the room as the heroic party steps forward, weapons and cleaning tools gleaming, ready to decide the fate of the realm in this epic confrontation.`;
+        }
+    }
+}
+
+// Digital Virtual Dice Roller for players without physical dice
+function rollVirtualDice(type) {
+    const output = document.getElementById('virtual-dice-output');
+    let max = type === 'd20' ? 20 : 6;
+    let roll = Math.floor(Math.random() * max) + 1;
+    
+    if (output) {
+        output.innerHTML = `<span class="text-amber-400 font-bold">🎲 Rolled a ${type.toUpperCase()}:</span> <span class="text-white text-sm font-black">${roll}</span> (Simulated digital roll)`;
+    }
+}
+
+// Add a new row to input individual player roll outcomes
+function addPlayerRollRow() {
+    const container = document.getElementById('player-rolls-container');
+    if (!container) return;
+
+    const rowCount = container.querySelectorAll('.player-roll-row').length + 1;
+    const newRow = document.createElement('div');
+    newRow.className = 'flex items-center gap-3 p-3 rounded-xl bg-slate-900 border border-slate-800 player-roll-row';
+    newRow.innerHTML = `
+        <input type="text" placeholder="Player Name" value="Player ${rowCount}" class="w-1/3 px-3 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-slate-200 text-xs focus:outline-none focus:border-amber-500/50 player-name-input">
+        <div class="flex-1 flex items-center gap-2">
+            <label class="text-[10px] font-mono text-slate-400">Total Roll:</label>
+            <input type="number" placeholder="e.g. 12" class="w-24 px-3 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-slate-200 text-xs focus:outline-none focus:border-amber-500/50 player-score-input">
+        </div>
+        <button onclick="this.closest('.player-roll-row').remove()" class="text-slate-500 hover:text-rose-400 text-xs px-2">✕</button>
+    `;
+    container.appendChild(newRow);
+}
+
+// Resolve Encounter and check party rolls against the Target DC
+function resolveEncounterOutcome() {
+    const encounterSelect = document.getElementById('encounter-target');
+    const dcDisplay = document.getElementById('encounter-dc-display');
+    const targetDC = dcDisplay ? parseInt(dcDisplay.textContent) || 10 : 10;
+
+    if (!encounterSelect || !encounterSelect.selectedOptions.length || !encounterSelect.value) {
+        alert("Please select an active quest target first!");
+        return;
+    }
+
+    const selectedOption = encounterSelect.selectedOptions[0];
+    const questTitle = selectedOption.getAttribute('data-title') || 'Quest';
+
+    const playerRows = document.querySelectorAll('.player-roll-row');
+    if (playerRows.length === 0) {
+        alert("Please add at least one player roll outcome!");
+        return;
+    }
+
+    let resultsSummary = [];
+    let partySuccess = true;
+
+    playerRows.forEach(row => {
+        const nameInput = row.querySelector('.player-name-input');
+        const scoreInput = row.querySelector('.player-score-input');
+        const playerName = nameInput ? nameInput.value.trim() || 'Hero' : 'Hero';
+        const playerScore = scoreInput ? parseInt(scoreInput.value) : NaN;
+
+        if (isNaN(playerScore)) {
+            resultsSummary.push(`${playerName}: No roll recorded`);
+            partySuccess = false;
+        } else if (playerScore >= targetDC) {
+            resultsSummary.push(`${playerName}: Rolled ${playerScore} (SUCCESS vs DC ${targetDC})`);
+        } else {
+            resultsSummary.push(`${playerName}: Rolled ${playerScore} (FAILED vs DC ${targetDC})`);
+            partySuccess = false;
+        }
+    });
+
+    const outcomeText = partySuccess ? `🎉 VICTORY! The party successfully conquered "${questTitle}"!` : `⚔️ DEFEAT / STRUGGLE against "${questTitle}". Try again or level up your pool!`;
+    
+    alert(`${outcomeText}\n\nBreakdown:\n` + resultsSummary.join('\n'));
+}
+
+// Auto-initialize encounter arena on load
+document.addEventListener('DOMContentLoaded', () => {
+    initEncounterArena();
+});
 </script>
 </body>
 </html>
