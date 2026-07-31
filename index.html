@@ -73,171 +73,114 @@
 
         <!-- PANEL 1: WORK PHASE (QUEST BOARD & ROSTER) -->
         <div id="panel-work" class="space-y-6">
-
-            <!-- ACTIVE ROSTER & VISITING HERO MEMORY -->
-            <div class="p-4 rounded-xl border border-slate-800 bg-slate-950/80">
-                <div class="flex justify-between items-center mb-3">
-                    <div>
-                        <h3 class="font-bold text-amber-400 text-sm tracking-wide flex items-center gap-2">
-                            <span>🛡️ Active Party (30-Min Block Roster)</span>
-                        </h3>
-                        <p class="text-[11px] text-slate-500">Tap ✏️ to edit hero profiles or quick-swap visiting guests/cousins.</p>
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Left Column: Active Party & Roster Management -->
+                <div class="lg:col-span-1 space-y-6">
+                    <div class="p-6 rounded-2xl bg-slate-950 border border-slate-800 space-y-4">
+                        <div class="flex items-center justify-between border-b border-slate-800/80 pb-3">
+                            <h3 class="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-2">
+                                <span>🛡️ Active Roster</span>
+                            </h3>
+                            <span id="party-count-badge" class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-indigo-500/15 border border-indigo-500/30 text-indigo-300">0 Members</span>
+                        </div>
+                        <div id="roster-container" class="space-y-2.5">
+                            <!-- Populated dynamically -->
+                        </div>
                     </div>
+                </div>
 
-                    <!-- Party Size Dropdown -->
-                    <div class="flex items-center space-x-2 bg-slate-900 border border-slate-800 px-2.5 py-1 rounded-lg">
-                        <label for="party-size-select" class="text-[11px] text-slate-400 font-medium">Party Size:</label>
-                        <select id="party-size-select" onchange="updatePlayerCount(this.value)" class="bg-slate-950 border border-amber-500/40 text-amber-300 font-bold text-xs rounded px-1.5 py-0.5 focus:outline-none">
-                            <option value="1">1 Hero</option>
-                            <option value="2">2 Heroes</option>
-                            <option value="3">3 Heroes</option>
-                            <option value="4" selected>4 Heroes</option>
+                <!-- Right Column: Quest Board & Chores -->
+                <div class="lg:col-span-2 space-y-6">
+                    <div class="p-6 rounded-2xl bg-slate-950 border border-slate-800 space-y-4">
+                        <div class="flex items-center justify-between border-b border-slate-800/80 pb-3">
+                            <h3 class="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-2">
+                                <span>📜 Quest Board</span>
+                            </h3>
+                            <button onclick="openAddQuestModal()" class="text-[11px] px-3 py-1 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 text-amber-300 font-medium transition">+ Add Quest</button>
+                        </div>
+                        <div id="quest-board-container" class="space-y-3">
+                            <!-- Populated dynamically -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- PANEL 2: ENCOUNTER ARENA & NARRATIVE COMBAT -->
+        <div id="panel-relax" class="hidden space-y-6">
+            <div class="p-6 rounded-2xl bg-slate-950 border border-slate-800 space-y-6" id="encounter-arena-panel">
+                <div class="flex items-center justify-between border-b border-slate-800/80 pb-4">
+                    <div>
+                        <h3 class="text-base font-bold text-amber-400 flex items-center gap-2">
+                            <span>⚔️ Encounter Arena & Narrative Combat</span>
+                        </h3>
+                        <p class="text-xs text-slate-400">Select a quest from your board to set the encounter target, generate an immersive AI story, and record player rolls.</p>
+                    </div>
+                    <div class="text-right">
+                        <span class="text-[10px] font-mono uppercase tracking-wider text-slate-500 block">Target DC to Pass</span>
+                        <span id="encounter-dc-display" class="text-2xl font-black text-amber-400">10</span>
+                    </div>
+                </div>
+
+                <!-- Quest Board Selector & AI Story Generator -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+                    <div class="space-y-1.5 md:col-span-2">
+                        <label class="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-400">Select Active Quest Target</label>
+                        <select id="encounter-target" onchange="updateEncounterDetails()" class="w-full px-3 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-200 text-xs focus:outline-none focus:border-amber-500/50">
+                            <!-- Populated dynamically from quest board chores -->
                         </select>
                     </div>
-                </div>
-
-                <!-- Active Player Grid Slots -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mb-4" id="active-players-grid">
-                    <!-- Rendered dynamically -->
-                </div>
-
-                <!-- MVP Selection -->
-                <div class="pt-3 border-t border-slate-800">
-                    <label class="block text-xs font-semibold text-slate-400 mb-2">🏅 Standout Hero / MVP for Encounter:</label>
-                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2" id="player-mvp-selectors">
-                        <!-- Rendered dynamically -->
+                    <div>
+                        <button onclick="generateRichEncounterStory()" class="w-full px-4 py-2.5 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 text-amber-300 text-xs font-medium flex items-center justify-center gap-2 transition-colors">
+                            ✨ Generate Immersive AI Story
+                        </button>
                     </div>
                 </div>
-            </div>
 
-            <!-- QUEST BOARD -->
-            <div class="space-y-3">
-                <div class="flex justify-between items-center">
-                    <h3 class="font-bold text-sm text-slate-300 uppercase tracking-wider">📋 Quest Board (Household Chores)</h3>
-                    <button onclick="resetChoresForNewSet()" class="text-[11px] px-2.5 py-1 rounded bg-slate-900 border border-slate-800 text-slate-400 hover:text-slate-200 transition">
-                        🔄 Reset Chores for Next Set
-                    </button>
+                <!-- Rich Descriptive Story Narrative Box -->
+                <div class="space-y-1.5">
+                    <label class="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-400">Scene Narrative & Buildup</label>
+                    <textarea id="encounter-story" rows="4" placeholder="Select a quest and click generate to create an immersive scene..." class="w-full p-4 rounded-xl bg-slate-900 border border-slate-800 text-slate-200 text-xs leading-relaxed focus:outline-none focus:border-amber-500/50 resize-y"></textarea>
                 </div>
-                <!-- ADD CUSTOM CHORE & AI GENERATOR SECTION -->
-    <div class="p-5 rounded-2xl bg-slate-950 border border-slate-800 space-y-4 mb-6">
-        <div class="flex items-center justify-between">
-            <h3 class="text-sm font-bold text-amber-400 flex items-center gap-2">
-                <span>🛠️ Add Custom Quest / Chore</span>
-            </h3>
-            <button onclick="generateAIChoreIdea()" class="px-3 py-1.5 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 text-amber-300 text-xs font-medium flex items-center gap-1.5 transition-colors">
-                ✨ AI Auto-Magic Generate
-            </button>
-        </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-            <div class="space-y-1">
-                <label class="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-400">Fantasy Quest Name</label>
-                <input type="text" id="custom-chore-title" placeholder="e.g. Scrub the Alchemist's Lab" class="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-200 text-xs focus:outline-none focus:border-amber-500/50">
-            </div>
-            <div class="space-y-1">
-                <label class="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-400">Real-World Chore</label>
-                <input type="text" id="custom-chore-desc" placeholder="e.g. Clean the Bathroom" class="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-200 text-xs focus:outline-none focus:border-amber-500/50">
-            </div>
-            <div class="space-y-1">
-                <label class="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-400">Loot Reward & Options</label>
-                <div class="flex gap-2 items-center">
-                    <select id="custom-chore-loot" class="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-200 text-xs focus:outline-none focus:border-amber-500/50">
-                        <option value="d4">+1d4 Pool</option>
-                        <option value="d6" selected>+1d6 Pool</option>
-                        <option value="d8">+1d8 Pool</option>
-                    </select>
-                    <button onclick="addNewChoreToBoard()" class="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs transition-colors whitespace-nowrap">
-                        Add Quest
-                    </button>
+                <!-- Digital Dice Roller & Quick Roll Section -->
+                <div class="p-4 rounded-xl bg-slate-900/60 border border-slate-800 space-y-3">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-bold text-slate-300 flex items-center gap-2">🎲 Digital Dice Roller (For Players Without Dice)</span>
+                        <div class="flex gap-2">
+                            <button onclick="rollVirtualDice('d20')" class="px-3 py-1.5 rounded-lg bg-indigo-600/20 hover:bg-indigo-600/30 border border-indigo-500/40 text-indigo-300 text-xs font-bold transition-colors">Roll d20</button>
+                            <button onclick="rollVirtualDice('d6')" class="px-3 py-1.5 rounded-lg bg-pink-600/20 hover:bg-pink-600/30 border border-pink-500/40 text-pink-300 text-xs font-bold transition-colors">Roll Pool (+1d6)</button>
+                        </div>
+                    </div>
+                    <div id="virtual-dice-output" class="text-xs font-mono text-slate-400 bg-slate-950 p-2.5 rounded-lg border border-slate-800/80">
+                        Click a digital dice button above to simulate a roll instantly.
+                    </div>
                 </div>
-                <!-- SAVE LOCK CHECKBOX (IGNORES ERASE/RESET BUTTONS) -->
-                <div class="flex items-center gap-2 pt-1.5">
-                    <input type="checkbox" id="custom-chore-locked" class="rounded bg-slate-900 border-slate-700 text-amber-500 focus:ring-0 w-3.5 h-3.5 cursor-pointer">
-                    <label for="custom-chore-locked" class="text-[11px] text-slate-400 cursor-pointer select-none">🔒 Lock / Save Task (Ignore Reset)</label>
-                </div>
-            </div>
-        </div>
-    </div>
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3" id="chores-container">
-                    <!-- Rendered dynamically -->
-                </div>
-            </div>
-        </div>
 
-        <!-- ENCOUNTER ARENA & NARRATIVE COMBAT PANEL -->
-    <div class="p-6 rounded-2xl bg-slate-950 border border-slate-800 space-y-6" id="encounter-arena-panel">
-        <div class="flex items-center justify-between border-b border-slate-800/80 pb-4">
-            <div>
-                <h3 class="text-base font-bold text-amber-400 flex items-center gap-2">
-                    <span>⚔️ Encounter Arena & Narrative Combat</span>
-                </h3>
-                <p class="text-xs text-slate-400">Select a quest from your board to set the encounter target, generate an immersive AI story, and record player rolls.</p>
-            </div>
-            <div class="text-right">
-                <span class="text-[10px] font-mono uppercase tracking-wider text-slate-500 block">Target DC to Pass</span>
-                <span id="encounter-dc-display" class="text-2xl font-black text-amber-400">10</span>
-            </div>
-        </div>
+                <!-- Per-Player Dice Outcomes Input Section -->
+                <div class="space-y-3">
+                    <div class="flex items-center justify-between">
+                        <h4 class="text-xs font-bold text-slate-300 uppercase tracking-wider">👥 Player Roll Outcomes</h4>
+                        <button onclick="addPlayerRollRow()" class="text-[11px] px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-800 text-slate-300 hover:text-amber-400 transition">+ Add Player</button>
+                    </div>
+                    <div id="player-rolls-container" class="space-y-2">
+                        <div class="flex items-center gap-3 p-3 rounded-xl bg-slate-900 border border-slate-800 player-roll-row">
+                            <input type="text" placeholder="Player Name" value="Player 1" class="w-1/3 px-3 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-slate-200 text-xs focus:outline-none focus:border-amber-500/50 player-name-input">
+                            <div class="flex-1 flex items-center gap-2">
+                                <label class="text-[10px] font-mono text-slate-400">Total Roll:</label>
+                                <input type="number" placeholder="e.g. 12" class="w-24 px-3 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-slate-200 text-xs focus:outline-none focus:border-amber-500/50 player-score-input">
+                            </div>
+                            <button onclick="this.closest('.player-roll-row').remove()" class="text-slate-500 hover:text-rose-400 text-xs px-2">✕</button>
+                        </div>
+                    </div>
+                </div>
 
-        <!-- Quest Board Selector & AI Story Generator -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
-            <div class="space-y-1.5 md:col-span-2">
-                <label class="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-400">Select Active Quest Target</label>
-                <select id="encounter-target" onchange="updateEncounterDetails()" class="w-full px-3 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-200 text-xs focus:outline-none focus:border-amber-500/50">
-                    <!-- Populated dynamically from quest board chores -->
-                </select>
-            </div>
-            <div>
-                <button onclick="generateRichEncounterStory()" class="w-full px-4 py-2.5 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 text-amber-300 text-xs font-medium flex items-center justify-center gap-2 transition-colors">
-                    ✨ Generate Immersive AI Story
+                <!-- Resolve Encounter Button -->
+                <button onclick="resolveEncounterOutcome()" class="w-full py-3.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-400 hover:from-amber-400 hover:to-amber-300 text-slate-950 font-black text-xs uppercase tracking-wider transition-all shadow-lg shadow-amber-500/20">
+                    ⚔️ Resolve Encounter & Check Party Victory
                 </button>
             </div>
         </div>
-
-        <!-- Rich Descriptive Story Narrative Box -->
-        <div class="space-y-1.5">
-            <label class="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-400">Scene Narrative & Buildup</label>
-            <textarea id="encounter-story" rows="4" placeholder="Select a quest and click generate to create an immersive scene..." class="w-full p-4 rounded-xl bg-slate-900 border border-slate-800 text-slate-200 text-xs leading-relaxed focus:outline-none focus:border-amber-500/50 resize-y"></textarea>
-        </div>
-
-        <!-- Digital Dice Roller & Quick Roll Section -->
-        <div class="p-4 rounded-xl bg-slate-900/60 border border-slate-800 space-y-3">
-            <div class="flex items-center justify-between">
-                <span class="text-xs font-bold text-slate-300 flex items-center gap-2">🎲 Digital Dice Roller (For Players Without Dice)</span>
-                <div class="flex gap-2">
-                    <button onclick="rollVirtualDice('d20')" class="px-3 py-1.5 rounded-lg bg-indigo-600/20 hover:bg-indigo-600/30 border border-indigo-500/40 text-indigo-300 text-xs font-bold transition-colors">Roll d20</button>
-                    <button onclick="rollVirtualDice('d6')" class="px-3 py-1.5 rounded-lg bg-pink-600/20 hover:bg-pink-600/30 border border-pink-500/40 text-pink-300 text-xs font-bold transition-colors">Roll Pool (+1d6)</button>
-                </div>
-            </div>
-            <div id="virtual-dice-output" class="text-xs font-mono text-slate-400 bg-slate-950 p-2.5 rounded-lg border border-slate-800/80">
-                Click a digital dice button above to simulate a roll instantly.
-            </div>
-        </div>
-
-        <!-- Per-Player Dice Outcomes Input Section -->
-        <div class="space-y-3">
-            <div class="flex items-center justify-between">
-                <h4 class="text-xs font-bold text-slate-300 uppercase tracking-wider">👥 Player Roll Outcomes</h4>
-                <button onclick="addPlayerRollRow()" class="text-[11px] px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-800 text-slate-300 hover:text-amber-400 transition">+ Add Player</button>
-            </div>
-            <div id="player-rolls-container" class="space-y-2">
-                <!-- Dynamically rendered player roll rows -->
-                <div class="flex items-center gap-3 p-3 rounded-xl bg-slate-900 border border-slate-800 player-roll-row">
-                    <input type="text" placeholder="Player Name" value="Player 1" class="w-1/3 px-3 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-slate-200 text-xs focus:outline-none focus:border-amber-500/50 player-name-input">
-                    <div class="flex-1 flex items-center gap-2">
-                        <label class="text-[10px] font-mono text-slate-400">Total Roll:</label>
-                        <input type="number" placeholder="e.g. 12" class="w-24 px-3 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-slate-200 text-xs focus:outline-none focus:border-amber-500/50 player-score-input">
-                    </div>
-                    <button onclick="this.closest('.player-roll-row').remove()" class="text-slate-500 hover:text-rose-400 text-xs px-2">✕</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Resolve Encounter Button -->
-        <button onclick="resolveEncounterOutcome()" class="w-full py-3.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-400 hover:from-amber-400 hover:to-amber-300 text-slate-950 font-black text-xs uppercase tracking-wider transition-all shadow-lg shadow-amber-500/20">
-            ⚔️ Resolve Encounter & Check Party Victory
-        </button>
-    </div>
 
         <!-- PANEL 3: INSTRUCTIONS & GAMEPLAY GUIDE -->
     <div id="panel-instructions" class="hidden space-y-6">
