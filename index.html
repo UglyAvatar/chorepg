@@ -118,6 +118,41 @@
                         🔄 Reset Chores for Next Set
                     </button>
                 </div>
+                <!-- ADD CUSTOM CHORE & AI GENERATOR SECTION -->
+    <div class="p-5 rounded-2xl bg-slate-950 border border-slate-800 space-y-4 mb-6">
+        <div class="flex items-center justify-between">
+            <h3 class="text-sm font-bold text-amber-400 flex items-center gap-2">
+                <span>🛠️ Add Custom Quest / Chore</span>
+            </h3>
+            <button onclick="generateAIChoreIdea()" class="px-3 py-1.5 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 text-amber-300 text-xs font-medium flex items-center gap-1.5 transition-colors">
+                ✨ AI Auto-Magic Generate
+            </button>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div class="space-y-1">
+                <label class="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-400">Fantasy Quest Name</label>
+                <input type="text" id="custom-chore-title" placeholder="e.g. Scrub the Alchemist's Lab" class="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-200 text-xs focus:outline-none focus:border-amber-500/50">
+            </div>
+            <div class="space-y-1">
+                <label class="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-400">Real-World Chore</label>
+                <input type="text" id="custom-chore-desc" placeholder="e.g. Clean the Bathroom" class="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-200 text-xs focus:outline-none focus:border-amber-500/50">
+            </div>
+            <div class="space-y-1">
+                <label class="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-400">Loot Reward (Dice)</label>
+                <div class="flex gap-2">
+                    <select id="custom-chore-loot" class="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-200 text-xs focus:outline-none focus:border-amber-500/50">
+                        <option value="d4">+1d4 Pool</option>
+                        <option value="d6" selected>+1d6 Pool</option>
+                        <option value="d8">+1d8 Pool</option>
+                    </select>
+                    <button onclick="addNewChoreToBoard()" class="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs transition-colors whitespace-nowrap">
+                        Add Quest
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3" id="chores-container">
                     <!-- Rendered dynamically -->
                 </div>
@@ -1086,6 +1121,95 @@
         if (promptInput) promptInput.value = state.activeStoryPrompt || "";
     } finally {
         if (promptInput) promptInput.disabled = false;
+    }
+}
+    // AI Generator and Custom Chore Management Functions
+async function generateAIChoreIdea() {
+    let apiKey = localStorage.getItem('gemini_api_key');
+    
+    if (!apiKey) {
+        apiKey = prompt("To use AI chore generation for free, enter your Google Gemini API Key (saved securely in local storage):\n\nGet a free key instantly at aistudio.google.com");
+        if (!apiKey) return;
+        localStorage.setItem('gemini_api_key', apiKey.replace(/\s+/g, ''));
+    }
+    
+    apiKey = localStorage.getItem('gemini_api_key') ? localStorage.getItem('gemini_api_key').replace(/\s+/g, '') : '';
+
+    const titleInput = document.getElementById('custom-chore-title');
+    const descInput = document.getElementById('custom-chore-desc');
+
+    if (titleInput) titleInput.value = "✨ Conjuring quest...";
+    if (descInput) descInput.value = "✨ Conjuring task...";
+
+    try {
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=${apiKey}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                contents: [{
+                    parts: [{ text: "Generate a creative fantasy chore pairing for a household productivity RPG. Return ONLY a valid JSON object with exactly two keys: 'fantasy' (a catchy fantasy quest name under 6 words) and 'real' (the corresponding real-world household chore under 5 words). Do not include markdown formatting like ```json." }]
+                }]
+            })
+        });
+
+        const data = await response.json();
+        
+        if (data.error) {
+            throw new Error(data.error.message || "API Error");
+        }
+
+        const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (!rawText) throw new Error("Empty response from AI.");
+
+        const cleanJsonStr = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
+        const choreObj = JSON.parse(cleanJsonStr);
+
+        if (titleInput) titleInput.value = choreObj.fantasy || "Banish Dust Sprites";
+        if (descInput) descInput.value = choreObj.real || "Dust the Living Room";
+
+    } catch (err) {
+        console.error("AI Chore Generation Error:", err);
+        localStorage.removeItem('gemini_api_key');
+        alert("Generation failed or key was invalid. Key has been cleared. Try clicking again.");
+        if (titleInput) titleInput.value = "";
+        if (descInput) descInput.value = "";
+    }
+}
+
+function addNewChoreToBoard() {
+    const title = document.getElementById('custom-chore-title').value.trim();
+    const desc = document.getElementById('custom-chore-desc').value.trim();
+    const loot = document.getElementById('custom-chore-loot').value;
+
+    if (!title || !desc) {
+        alert("Please provide both a fantasy quest name and a real-world chore description!");
+        return;
+    }
+
+    if (typeof state === 'undefined') {
+        window.state = { chores: [] };
+    }
+    if (!state.chores) {
+        state.chores = [];
+    }
+
+    state.chores.push({
+        id: 'chore_' + Date.now(),
+        title: title,
+        description: desc,
+        loot: loot,
+        completed: false,
+        custom: true
+    });
+
+    document.getElementById('custom-chore-title').value = '';
+    document.getElementById('custom-chore-desc').value = '';
+
+    if (typeof saveState === 'function') saveState();
+    if (typeof renderQuestBoard === 'function') {
+        renderQuestBoard();
+    } else {
+        location.reload();
     }
 }
 </script>
