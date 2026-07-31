@@ -83,9 +83,20 @@
                         </h3>
                         <p class="text-[11px] text-slate-500">Tap ✏️ to edit hero profiles or quick-swap visiting guests/cousins.</p>
                     </div>
+
+                    <!-- Party Size Dropdown -->
+                    <div class="flex items-center space-x-2 bg-slate-900 border border-slate-800 px-2.5 py-1 rounded-lg">
+                        <label for="party-size-select" class="text-[11px] text-slate-400 font-medium">Party Size:</label>
+                        <select id="party-size-select" onchange="updatePlayerCount(this.value)" class="bg-slate-950 border border-amber-500/40 text-amber-300 font-bold text-xs rounded px-1.5 py-0.5 focus:outline-none">
+                            <option value="1">1 Hero</option>
+                            <option value="2">2 Heroes</option>
+                            <option value="3">3 Heroes</option>
+                            <option value="4" selected>4 Heroes</option>
+                        </select>
+                    </div>
                 </div>
 
-                <!-- 4 Player Grid Slots -->
+                <!-- Active Player Grid Slots -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mb-4" id="active-players-grid">
                     <!-- Rendered dynamically -->
                 </div>
@@ -441,13 +452,33 @@
         saveState();
     }
 
-    // --- PLAYER ROSTER & MEMORY MANAGEMENT ---
+   // --- PLAYER ROSTER & MEMORY MANAGEMENT ---
+
+    function updatePlayerCount(count) {
+        state.playerCount = parseInt(count, 10);
+        
+        // Reset MVP selection if selected MVP is no longer active
+        const activeCount = state.playerCount;
+        const activeNames = state.activeSlots.slice(0, activeCount).map(s => s.name);
+        if (state.selectedMVP && !activeNames.includes(state.selectedMVP)) {
+            state.selectedMVP = null;
+        }
+
+        renderActiveSlots();
+        renderMVPButtons();
+        saveState();
+        showToast("👥 Party Size Updated", `Set to ${state.playerCount} player(s). Target rolls adjusted!`);
+    }
+
     function renderActiveSlots() {
         const grid = document.getElementById('active-players-grid');
         if (!grid) return;
         grid.innerHTML = '';
 
-        state.activeSlots.forEach((slot) => {
+        const activeCount = state.playerCount || 4;
+        const currentSlots = state.activeSlots.slice(0, activeCount);
+
+        currentSlots.forEach((slot) => {
             const card = document.createElement('div');
             card.className = "p-2.5 rounded-lg bg-slate-900 border border-slate-800 flex items-center justify-between text-xs space-x-2";
             card.id = `player-slot-${slot.id}`;
@@ -479,14 +510,20 @@
             `;
             grid.appendChild(card);
         });
+
+        const partySelect = document.getElementById('party-size-select');
+        if (partySelect) partySelect.value = activeCount;
     }
 
-   function enableSlotEdit(slotId) {
+    function enableSlotEdit(slotId) {
         const slot = state.activeSlots.find(s => s.id === slotId);
         if (!slot) return;
 
         const displayDiv = document.getElementById(`slot-display-${slotId}`);
         if (!displayDiv) return;
+
+        // Check if hero exists in library to show delete button
+        const isInLibrary = state.heroLibrary.some(h => h.name.toLowerCase() === slot.name.toLowerCase());
 
         const iconOptions = [
             // --- Cute & Whimsical Archetypes ---
@@ -531,9 +568,17 @@
                     <input type="text" id="edit-name-${slotId}" value="${slot.name.replace(/"/g, '&quot;')}" placeholder="Hero Name" class="flex-1 text-xs p-1 bg-slate-950 border border-amber-500/50 rounded text-slate-100 focus:outline-none">
                 </div>
                 <input type="text" id="edit-class-${slotId}" value="${slot.class.replace(/"/g, '&quot;')}" placeholder="Class (e.g. Rogue)" class="w-full text-[11px] p-1 bg-slate-950 border border-slate-700 rounded text-slate-400 focus:outline-none">
-                <button onclick="saveSlotEdit(${slotId})" class="w-full mt-1 bg-amber-500 text-slate-950 font-bold text-[10px] py-0.5 rounded shadow">
-                    Save Hero
-                </button>
+                
+                <div class="flex gap-1 mt-1">
+                    <button onclick="saveSlotEdit(${slotId})" class="flex-1 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-[10px] py-1 rounded shadow transition">
+                        Save Hero
+                    </button>
+                    ${isInLibrary ? `
+                        <button onclick="deleteHeroFromLibrary(${slotId})" title="Delete hero from library" class="px-2 bg-red-900/80 hover:bg-red-700 text-red-100 font-bold text-[10px] py-1 rounded border border-red-700/60 transition">
+                            🗑️ Delete
+                        </button>
+                    ` : ''}
+                </div>
             </div>
         `;
     }
@@ -569,6 +614,32 @@
         showToast("👤 Hero Saved!", `Updated Slot ${slotId} to ${newName}.`);
     }
 
+    function deleteHeroFromLibrary(slotId) {
+        const slot = state.activeSlots.find(s => s.id === slotId);
+        if (!slot) return;
+
+        const heroName = slot.name;
+
+        if (!confirm(`Are you sure you want to delete "${heroName}" from your Hero Library?`)) {
+            return;
+        }
+
+        state.heroLibrary = state.heroLibrary.filter(h => h.name.toLowerCase() !== heroName.toLowerCase());
+
+        slot.name = `Player ${slot.id}`;
+        slot.class = "Adventurer";
+        slot.icon = "🛡️";
+
+        if (state.selectedMVP === heroName) {
+            state.selectedMVP = null;
+        }
+
+        renderActiveSlots();
+        renderMVPButtons();
+        saveState();
+        showToast("🗑️ Hero Deleted", `Removed "${heroName}" from your saved library.`);
+    }
+
     function swapFromLibrary(slotId, selectedName) {
         if (selectedName === '__custom__') {
             enableSlotEdit(slotId);
@@ -594,7 +665,16 @@
         if (!container) return;
         container.innerHTML = '';
 
-        state.activeSlots.forEach(p => {
+        const activeCount = state.playerCount || 4;
+        const currentSlots = state.activeSlots.slice(0, activeCount);
+
+        container.className = `grid gap-2 ${
+            activeCount === 1 ? 'grid-cols-1' : 
+            activeCount === 2 ? 'grid-cols-2' : 
+            activeCount === 3 ? 'grid-cols-3' : 'grid-cols-2 sm:grid-cols-4'
+        }`;
+
+        currentSlots.forEach(p => {
             const btn = document.createElement('button');
             const isSelected = state.selectedMVP === p.name;
 
@@ -620,6 +700,13 @@
         saveState();
     }
 
+    // Dynamic Difficulty Scaler Helper
+    function getScaledTarget(baseTarget4Player) {
+        const count = state.playerCount || 4;
+        const scaleFactors = { 1: 0.35, 2: 0.55, 3: 0.80, 4: 1.0 };
+        return Math.max(1, Math.round(baseTarget4Player * (scaleFactors[count] || 1.0)));
+    }
+    
     // --- GAME ENGINE & REROLLS ---
     function executeLuckReroll() {
         if (state.isRolling || state.luckPoints <= 0 || !state.lastRollData) return;
