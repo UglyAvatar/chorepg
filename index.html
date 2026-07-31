@@ -81,7 +81,7 @@
                             <h3 class="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-2">
                                 <span>🛡️ Active Roster</span>
                             </h3>
-                            <span id="party-count-badge" class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-indigo-500/15 border border-indigo-500/30 text-indigo-300">0 Members</span>
+                            <span id="party-count-badge" class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-indigo-500/15 border border-indigo-500/30 text-indigo-300">4 Members</span>
                         </div>
                         <div id="roster-container" class="space-y-2.5">
                             <!-- Populated dynamically -->
@@ -96,9 +96,9 @@
                             <h3 class="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-2">
                                 <span>📜 Quest Board</span>
                             </h3>
-                            <button onclick="openAddQuestModal()" class="text-[11px] px-3 py-1 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 text-amber-300 font-medium transition">+ Add Quest</button>
+                            <button onclick="resetChoresForNewSet()" class="text-[11px] px-3 py-1 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 text-amber-300 font-medium transition">🔄 Reset Board</button>
                         </div>
-                        <div id="quest-board-container" class="space-y-3">
+                        <div id="chores-container" class="space-y-3">
                             <!-- Populated dynamically -->
                         </div>
                     </div>
@@ -127,12 +127,12 @@
                     <div class="space-y-1.5 md:col-span-2">
                         <label class="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-400">Select Active Quest Target</label>
                         <select id="encounter-target" onchange="updateEncounterDetails()" class="w-full px-3 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-200 text-xs focus:outline-none focus:border-amber-500/50">
-                            <!-- Populated dynamically from quest board chores -->
+                            <!-- Populated dynamically -->
                         </select>
                     </div>
                     <div>
                         <button onclick="generateRichEncounterStory()" class="w-full px-4 py-2.5 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 text-amber-300 text-xs font-medium flex items-center justify-center gap-2 transition-colors">
-                            ✨ Generate Immersive AI Story
+                            ✨ Generate AI Story
                         </button>
                     </div>
                 </div>
@@ -149,7 +149,7 @@
                         <span class="text-xs font-bold text-slate-300 flex items-center gap-2">🎲 Digital Dice Roller (For Players Without Dice)</span>
                         <div class="flex gap-2">
                             <button onclick="rollVirtualDice('d20')" class="px-3 py-1.5 rounded-lg bg-indigo-600/20 hover:bg-indigo-600/30 border border-indigo-500/40 text-indigo-300 text-xs font-bold transition-colors">Roll d20</button>
-                            <button onclick="rollVirtualDice('d6')" class="px-3 py-1.5 rounded-lg bg-pink-600/20 hover:bg-pink-600/30 border border-pink-500/40 text-pink-300 text-xs font-bold transition-colors">Roll Pool (+1d6)</button>
+                            <button onclick="rollVirtualDice('d6')" class="px-3 py-1.5 rounded-lg bg-pink-600/20 hover:bg-pink-600/30 border border-pink-500/40 text-pink-300 text-xs font-bold transition-colors">Roll d6</button>
                         </div>
                     </div>
                     <div id="virtual-dice-output" class="text-xs font-mono text-slate-400 bg-slate-950 p-2.5 rounded-lg border border-slate-800/80">
@@ -183,57 +183,17 @@
         </div>
 
         <!-- PANEL 3: INSTRUCTIONS & GAMEPLAY GUIDE -->
-    <div id="panel-instructions" class="hidden space-y-6">
-        <div class="p-5 rounded-2xl bg-slate-950 border border-slate-800 space-y-4">
-            <h2 class="text-lg font-bold text-amber-400 flex items-center gap-2">
-                <span>📜 Chore RPG: 30-Minute Game Loop Guide</span>
-            </h2>
-            <p class="text-xs text-slate-400 leading-relaxed">
-                Turn real-life household productivity into an epic tabletop campaign! Work together to complete tasks, stock up your dice inventory, and face monsters in the encounter phase.
-            </p>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
-                <div class="p-3.5 rounded-xl bg-slate-900/60 border border-slate-800 space-y-1.5">
-                    <span class="text-[10px] font-mono font-bold uppercase tracking-wider text-amber-400">Step 1 • Set Up Roster</span>
-                    <h4 class="font-bold text-sm text-slate-200">Manage Party & Heroes</h4>
-                    <p class="text-xs text-slate-400">
-                        Select your <strong>Party Size</strong> (1 to 4 players)—encounter DC targets scale automatically! Tap <strong>✏️</strong> on any slot to change hero names, classes, or icons. Save heroes to your library or tap <strong class="text-red-400">🗑️ Delete</strong> to remove extra profiles.
-                    </p>
-                </div>
-
-                <div class="p-3.5 rounded-xl bg-slate-900/60 border border-slate-800 space-y-1.5">
-                    <span class="text-[10px] font-mono font-bold uppercase tracking-wider text-indigo-400">Step 2 • The Work Phase</span>
-                    <h4 class="font-bold text-sm text-slate-200">Complete Household Quests</h4>
-                    <p class="text-xs text-slate-400">
-                        Spend 20–25 minutes clearing real-world chores. Checking off quests rewards your party with bonus dice (<code class="text-indigo-300">d4</code>, <code class="text-purple-300">d6</code>, or <code class="text-pink-300">d8</code>) for your total roll pool.
-                    </p>
-                </div>
-
-                <div class="p-3.5 rounded-xl bg-slate-900/60 border border-slate-800 space-y-1.5">
-                    <span class="text-[10px] font-mono font-bold uppercase tracking-wider text-purple-400">Step 3 • The Encounter Arena</span>
-                    <h4 class="font-bold text-sm text-slate-200">Face the Encounter</h4>
-                    <p class="text-xs text-slate-400">
-                        Switch to the Encounter Arena tab during rest time. Select your enemy Threat Level, tag an MVP hero, and unleash your collected dice pool against targets scaled to your party!
-                    </p>
-                </div>
-
-                <div class="p-3.5 rounded-xl bg-slate-900/60 border border-slate-800 space-y-1.5">
-                    <span class="text-[10px] font-mono font-bold uppercase tracking-wider text-emerald-400">Step 4 • Backup & Restore</span>
-                    <h4 class="font-bold text-sm text-slate-200">Export & Import Campaign</h4>
-                    <p class="text-xs text-slate-400">
-                        Use the <strong>📥 Export</strong> and <strong>📤 Import</strong> buttons in the header bar to back up your campaign file or move your saved progress between devices.
-                    </p>
-                </div>
-
-                <div class="p-3.5 rounded-xl bg-slate-900/60 border border-slate-800 space-y-1.5 md:col-span-2">
-                    <span class="text-[10px] font-mono font-bold uppercase tracking-wider text-sky-400">Step 5 • AI Story Companion</span>
-                    <h4 class="font-bold text-sm text-slate-200">Generate Custom Campaign Hooks</h4>
-                    <p class="text-xs text-slate-400">
-                        Click <strong>✨ Generate AI Hook</strong> in the Encounter Arena to pull custom fantasy scenarios using Google Gemini. Get a free key instantly at <a href="https://aistudio.google.com/api-keys" target="_blank" class="text-sky-400 underline">Google AI Studio</a>, paste it once when prompted, and let the AI write your adventure context!
-                    </p>
-                </div>
+        <div id="panel-instructions" class="hidden space-y-6">
+            <div class="p-5 rounded-2xl bg-slate-950 border border-slate-800 space-y-4">
+                <h2 class="text-lg font-bold text-amber-400 flex items-center gap-2">
+                    <span>📜 Chore RPG: 30-Minute Game Loop Guide</span>
+                </h2>
+                <p class="text-xs text-slate-400 leading-relaxed">
+                    Turn real-life household productivity into an epic tabletop campaign! Work together to complete tasks, stock up your dice inventory, and face monsters in the encounter phase.
+                </p>
             </div>
         </div>
+
     </div>
 
     <!-- Dynamic Toast Notification Container -->
@@ -243,7 +203,7 @@
     </div>
 
 <script>
-    const STORAGE_KEY = 'chore_rpg_state_v6';
+    const STORAGE_KEY = 'chore_rpg_state_v7';
 
     const defaultState = {
         currentPhase: 'work',
@@ -280,14 +240,8 @@
     window.onload = function() {
         renderChores();
         updateInventoryUI();
-        updateChallengeTarget();
-        setupInitialDiceArena();
-        renderQuestHistory();
         renderActiveSlots();
-        renderMVPButtons();
-        
-        const promptInput = document.getElementById('input-story-prompt');
-        if (promptInput) promptInput.value = state.activeStoryPrompt || "";
+        initEncounterArena();
     };
 
     function loadState() {
@@ -295,7 +249,6 @@
             const saved = localStorage.getItem(STORAGE_KEY);
             if (!saved) return JSON.parse(JSON.stringify(defaultState));
             const parsed = JSON.parse(saved);
-
             return {
                 ...JSON.parse(JSON.stringify(defaultState)),
                 ...parsed,
@@ -303,8 +256,7 @@
                 activeSlots: Array.isArray(parsed.activeSlots) && parsed.activeSlots.length === 4 ? parsed.activeSlots : defaultState.activeSlots,
                 heroLibrary: Array.isArray(parsed.heroLibrary) ? parsed.heroLibrary : defaultState.heroLibrary,
                 chores: Array.isArray(parsed.chores) ? parsed.chores : defaultState.chores,
-                questHistory: Array.isArray(parsed.questHistory) ? parsed.questHistory : [],
-                isRolling: false
+                questHistory: Array.isArray(parsed.questHistory) ? parsed.questHistory : []
             };
         } catch (e) {
             return JSON.parse(JSON.stringify(defaultState));
@@ -313,34 +265,18 @@
 
     function saveState() {
         try {
-            const promptInput = document.getElementById('input-story-prompt');
-            if (promptInput) state.activeStoryPrompt = promptInput.value;
-
-            const payload = {
-                currentPhase: state.currentPhase,
-                dicePool: state.dicePool,
-                luckPoints: state.luckPoints,
-                activeDC: state.activeDC,
-                chores: state.chores,
-                activeSlots: state.activeSlots,
-                heroLibrary: state.heroLibrary,
-                questHistory: state.questHistory,
-                activeStoryPrompt: state.activeStoryPrompt
-            };
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
         } catch (e) {
             console.error("Save state failure:", e);
         }
     }
 
-    // --- DATA IMPORT & EXPORT FEATURES ---
     function exportSaveData() {
         try {
             const dateStr = new Date().toISOString().slice(0, 10);
             const jsonStr = JSON.stringify(state, null, 2);
             const blob = new Blob([jsonStr], { type: "application/json" });
             const url = URL.createObjectURL(blob);
-            
             const anchor = document.createElement('a');
             anchor.href = url;
             anchor.download = `ChoreRPG_Save_${dateStr}.json`;
@@ -348,76 +284,43 @@
             anchor.click();
             document.body.removeChild(anchor);
             URL.revokeObjectURL(url);
-
             showToast("💾 Backup Exported", "Campaign save file downloaded!");
         } catch (err) {
-            console.error("Export Error:", err);
             showToast("⚠️ Export Failed", "Unable to create backup file.");
         }
     }
 
     function triggerImport() {
         const fileInput = document.getElementById('import-file-input');
-        if (fileInput) {
-            fileInput.value = '';
-            fileInput.click();
-        }
+        if (fileInput) { fileInput.value = ''; fileInput.click(); }
     }
 
     function handleImportFile(event) {
         const file = event.target.files[0];
         if (!file) return;
-
         const reader = new FileReader();
         reader.onload = function(e) {
             try {
                 const parsed = JSON.parse(e.target.result);
-                if (!parsed || typeof parsed !== 'object') {
-                    throw new Error("Invalid file structure");
-                }
-
-                state = {
-                    ...JSON.parse(JSON.stringify(defaultState)),
-                    ...parsed,
-                    dicePool: { ...defaultState.dicePool, ...(parsed.dicePool || {}) },
-                    activeSlots: Array.isArray(parsed.activeSlots) && parsed.activeSlots.length === 4 ? parsed.activeSlots : defaultState.activeSlots,
-                    heroLibrary: Array.isArray(parsed.heroLibrary) ? parsed.heroLibrary : defaultState.heroLibrary,
-                    chores: Array.isArray(parsed.chores) ? parsed.chores : defaultState.chores,
-                    questHistory: Array.isArray(parsed.questHistory) ? parsed.questHistory : [],
-                    isRolling: false
-                };
-
+                state = { ...defaultState, ...parsed };
                 saveState();
-
                 renderChores();
                 updateInventoryUI();
-                updateChallengeTarget();
-                setupInitialDiceArena();
-                renderQuestHistory();
                 renderActiveSlots();
-                renderMVPButtons();
-
-                const promptInput = document.getElementById('input-story-prompt');
-                if (promptInput) promptInput.value = state.activeStoryPrompt || "";
-
+                initEncounterArena();
                 showToast("📥 Save Loaded!", "Campaign history and heroes restored.");
             } catch (err) {
-                console.error("Import Error:", err);
                 showToast("❌ Import Failed", "Corrupted or invalid JSON file.");
             }
         };
         reader.readAsText(file);
     }
 
-    // --- THREE-WAY TAB NAVIGATION ---
     function switchMode(mode) {
-        if (state.isRolling) return;
         state.currentPhase = mode;
-
         const btnWork = document.getElementById('btn-mode-work');
         const btnRelax = document.getElementById('btn-mode-relax');
         const btnInst = document.getElementById('btn-mode-instructions');
-
         const panelWork = document.getElementById('panel-work');
         const panelRelax = document.getElementById('panel-relax');
         const panelInst = document.getElementById('panel-instructions');
@@ -425,7 +328,6 @@
         [btnWork, btnRelax, btnInst].forEach(b => {
             if (b) b.className = "px-4 py-2 rounded-lg font-bold text-xs transition text-slate-400 hover:text-slate-200";
         });
-
         if (panelWork) panelWork.classList.add('hidden');
         if (panelRelax) panelRelax.classList.add('hidden');
         if (panelInst) panelInst.classList.add('hidden');
@@ -436,307 +338,30 @@
         } else if (mode === 'relax') {
             if (btnRelax) btnRelax.className = "px-4 py-2 rounded-lg font-bold text-xs transition bg-purple-500 text-slate-950 shadow";
             if (panelRelax) panelRelax.classList.remove('hidden');
-            setupInitialDiceArena();
+            initEncounterArena();
         } else if (mode === 'instructions') {
             if (btnInst) btnInst.className = "px-4 py-2 rounded-lg font-bold text-xs transition bg-indigo-500 text-white shadow";
             if (panelInst) panelInst.classList.remove('hidden');
         }
-
         saveState();
-    }
-
-   // --- PLAYER ROSTER & MEMORY MANAGEMENT ---
-
-    function updatePlayerCount(count) {
-        state.playerCount = parseInt(count, 10);
-        
-        // Reset MVP selection if selected MVP is no longer active
-        const activeCount = state.playerCount;
-        const activeNames = state.activeSlots.slice(0, activeCount).map(s => s.name);
-        if (state.selectedMVP && !activeNames.includes(state.selectedMVP)) {
-            state.selectedMVP = null;
-        }
-
-        renderActiveSlots();
-        renderMVPButtons();
-        saveState();
-        showToast("👥 Party Size Updated", `Set to ${state.playerCount} player(s). Target rolls adjusted!`);
     }
 
     function renderActiveSlots() {
-        const grid = document.getElementById('active-players-grid');
+        const grid = document.getElementById('roster-container');
         if (!grid) return;
         grid.innerHTML = '';
 
-        const activeCount = state.playerCount || 4;
-        const currentSlots = state.activeSlots.slice(0, activeCount);
-
-        currentSlots.forEach((slot) => {
+        state.activeSlots.forEach((slot) => {
             const card = document.createElement('div');
             card.className = "p-2.5 rounded-lg bg-slate-900 border border-slate-800 flex items-center justify-between text-xs space-x-2";
-            card.id = `player-slot-${slot.id}`;
-
-            let optionsHTML = `<option value="__custom__">+ Custom Hero...</option>`;
-            state.heroLibrary.forEach(hero => {
-                const isSelected = hero.name === slot.name;
-                const safeName = hero.name.replace(/"/g, '&quot;');
-                optionsHTML += `<option value="${safeName}" ${isSelected ? 'selected' : ''}>${hero.icon} ${hero.name} (${hero.class})</option>`;
-            });
-
             card.innerHTML = `
-                <div class="flex-1 min-w-0" id="slot-display-${slot.id}">
-                    <div class="flex items-center space-x-1.5">
-                        <span class="font-bold text-slate-200 truncate">${slot.icon} ${slot.name}</span>
-                    </div>
+                <div class="flex-1 min-w-0">
+                    <span class="font-bold text-slate-200 truncate">${slot.icon} ${slot.name}</span>
                     <span class="text-[10px] text-slate-400 block truncate">${slot.class}</span>
-                </div>
-                
-                <div class="flex items-center space-x-1">
-                    <select onchange="swapFromLibrary(${slot.id}, this.value)" class="text-[10px] bg-slate-950 border border-slate-800 text-slate-300 rounded px-1.5 py-1 max-w-[110px] focus:outline-none">
-                        ${optionsHTML}
-                    </select>
-
-                    <button onclick="enableSlotEdit(${slot.id})" title="Edit Player Name/Class" class="px-1.5 py-1 bg-slate-800 hover:bg-amber-500 hover:text-slate-950 border border-slate-700 rounded transition text-slate-300">
-                        ✏️
-                    </button>
                 </div>
             `;
             grid.appendChild(card);
         });
-
-        const partySelect = document.getElementById('party-size-select');
-        if (partySelect) partySelect.value = activeCount;
-    }
-
-    function enableSlotEdit(slotId) {
-        const slot = state.activeSlots.find(s => s.id === slotId);
-        if (!slot) return;
-
-        const displayDiv = document.getElementById(`slot-display-${slotId}`);
-        if (!displayDiv) return;
-
-        // Check if hero exists in library to show delete button
-        const isInLibrary = state.heroLibrary.some(h => h.name.toLowerCase() === slot.name.toLowerCase());
-
-        const iconOptions = [
-            // --- Cute & Whimsical Archetypes ---
-            { icon: "🧚", label: "Fairy / Pixie" },
-            { icon: "👑", label: "Elemental Princess" },
-            { icon: "🦄", label: "Unicorn Knight" },
-            { icon: "🧹", label: "Cute Witch" },
-            { icon: "🧜‍♀️", label: "Mermaid Songstress" },
-            { icon: "🌟", label: "Starlight Mage" },
-            { icon: "🪷", label: "Forest Nymph" },
-            { icon: "🐱", label: "Cat Rogue / Felis" },
-            { icon: "🧪", label: "Potion Alchemist" },
-            { icon: "🍄", label: "Mushroom Druid" },
-
-            // --- Classic D&D Classes ---
-            { icon: "🛡️", label: "Paladin / Shield" },
-            { icon: "⚔️", label: "Fighter / Swords" },
-            { icon: "🏹", label: "Ranger / Bow" },
-            { icon: "🗡️", label: "Rogue / Dagger" },
-            { icon: "🧙", label: "Wizard / Hat" },
-            { icon: "🔮", label: "Sorcerer / Orb" },
-            { icon: "🪕", label: "Bard / Lute" },
-            { icon: "🌿", label: "Druid / Nature" },
-            { icon: "🪓", label: "Barbarian / Axe" },
-            { icon: "🔨", label: "Cleric / Hammer" },
-            { icon: "🥋", label: "Monk / Fist" },
-            { icon: "👁️", label: "Warlock / Eye" },
-            { icon: "⚙️", label: "Artificer / Gear" },
-            { icon: "🐉", label: "Dragon" }
-        ];
-
-        let selectOptions = iconOptions.map(opt => 
-            `<option value="${opt.icon}" ${opt.icon === slot.icon ? 'selected' : ''}>${opt.icon} ${opt.label}</option>`
-        ).join('');
-
-        displayDiv.innerHTML = `
-            <div class="space-y-1 my-0.5">
-                <div class="flex gap-1">
-                    <select id="edit-icon-${slotId}" class="text-xs p-1 bg-slate-950 border border-slate-700 rounded text-slate-100 focus:outline-none">
-                        ${selectOptions}
-                    </select>
-                    <input type="text" id="edit-name-${slotId}" value="${slot.name.replace(/"/g, '&quot;')}" placeholder="Hero Name" class="flex-1 text-xs p-1 bg-slate-950 border border-amber-500/50 rounded text-slate-100 focus:outline-none">
-                </div>
-                <input type="text" id="edit-class-${slotId}" value="${slot.class.replace(/"/g, '&quot;')}" placeholder="Class (e.g. Rogue)" class="w-full text-[11px] p-1 bg-slate-950 border border-slate-700 rounded text-slate-400 focus:outline-none">
-                
-                <div class="flex gap-1 mt-1">
-                    <button onclick="saveSlotEdit(${slotId})" class="flex-1 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-[10px] py-1 rounded shadow transition">
-                        Save Hero
-                    </button>
-                    ${isInLibrary ? `
-                        <button onclick="deleteHeroFromLibrary(${slotId})" title="Delete hero from library" class="px-2 bg-red-900/80 hover:bg-red-700 text-red-100 font-bold text-[10px] py-1 rounded border border-red-700/60 transition">
-                            🗑️ Delete
-                        </button>
-                    ` : ''}
-                </div>
-            </div>
-        `;
-    }
-
-    function saveSlotEdit(slotId) {
-        const nameInput = document.getElementById(`edit-name-${slotId}`);
-        const classInput = document.getElementById(`edit-class-${slotId}`);
-        const iconSelect = document.getElementById(`edit-icon-${slotId}`);
-        if (!nameInput) return;
-
-        const newName = nameInput.value.trim() || `Player ${slotId}`;
-        const newClass = classInput.value.trim() || "Adventurer";
-        const newIcon = iconSelect ? iconSelect.value : "🛡️";
-
-        const slot = state.activeSlots.find(s => s.id === slotId);
-        if (slot) {
-            slot.name = newName;
-            slot.class = newClass;
-            slot.icon = newIcon;
-        }
-
-        const existingInLib = state.heroLibrary.find(h => h.name.toLowerCase() === newName.toLowerCase());
-        if (!existingInLib) {
-            state.heroLibrary.push({ name: newName, class: newClass, icon: newIcon });
-        } else {
-            existingInLib.class = newClass;
-            existingInLib.icon = newIcon;
-        }
-
-        renderActiveSlots();
-        renderMVPButtons();
-        saveState();
-        showToast("👤 Hero Saved!", `Updated Slot ${slotId} to ${newName}.`);
-    }
-
-    function deleteHeroFromLibrary(slotId) {
-        const slot = state.activeSlots.find(s => s.id === slotId);
-        if (!slot) return;
-
-        const heroName = slot.name;
-
-        if (!confirm(`Are you sure you want to delete "${heroName}" from your Hero Library?`)) {
-            return;
-        }
-
-        state.heroLibrary = state.heroLibrary.filter(h => h.name.toLowerCase() !== heroName.toLowerCase());
-
-        slot.name = `Player ${slot.id}`;
-        slot.class = "Adventurer";
-        slot.icon = "🛡️";
-
-        if (state.selectedMVP === heroName) {
-            state.selectedMVP = null;
-        }
-
-        renderActiveSlots();
-        renderMVPButtons();
-        saveState();
-        showToast("🗑️ Hero Deleted", `Removed "${heroName}" from your saved library.`);
-    }
-
-    function swapFromLibrary(slotId, selectedName) {
-        if (selectedName === '__custom__') {
-            enableSlotEdit(slotId);
-            return;
-        }
-
-        const libraryHero = state.heroLibrary.find(h => h.name === selectedName);
-        const slot = state.activeSlots.find(s => s.id === slotId);
-
-        if (libraryHero && slot) {
-            slot.name = libraryHero.name;
-            slot.class = libraryHero.class;
-            slot.icon = libraryHero.icon;
-            renderActiveSlots();
-            renderMVPButtons();
-            saveState();
-            showToast("🔄 Roster Updated", `${slot.name} active for this block.`);
-        }
-    }
-
-    function renderMVPButtons() {
-        const container = document.getElementById('player-mvp-selectors');
-        if (!container) return;
-        container.innerHTML = '';
-
-        const activeCount = state.playerCount || 4;
-        const currentSlots = state.activeSlots.slice(0, activeCount);
-
-        container.className = `grid gap-2 ${
-            activeCount === 1 ? 'grid-cols-1' : 
-            activeCount === 2 ? 'grid-cols-2' : 
-            activeCount === 3 ? 'grid-cols-3' : 'grid-cols-2 sm:grid-cols-4'
-        }`;
-
-        currentSlots.forEach(p => {
-            const btn = document.createElement('button');
-            const isSelected = state.selectedMVP === p.name;
-
-            btn.className = `px-2 py-1.5 rounded-lg border text-xs text-left transition flex flex-col ${
-                isSelected 
-                    ? 'bg-amber-500 border-amber-400 text-slate-950 font-bold shadow-md shadow-amber-500/20' 
-                    : 'bg-slate-900 border-slate-800 text-slate-300 hover:border-amber-500/40'
-            }`;
-            
-            btn.onclick = () => selectMVP(p.name);
-            btn.innerHTML = `
-                <span class="truncate font-medium">${p.icon} ${p.name}</span>
-                <span class="text-[10px] opacity-70 font-normal truncate">${p.class}</span>
-            `;
-            container.appendChild(btn);
-        });
-    }
-
-    function selectMVP(playerName) {
-        if (state.isRolling) return;
-        state.selectedMVP = state.selectedMVP === playerName ? null : playerName;
-        renderMVPButtons();
-        saveState();
-    }
-
-    // Dynamic Difficulty Scaler Helper
-    function getScaledTarget(baseTarget4Player) {
-        const count = state.playerCount || 4;
-        const scaleFactors = { 1: 0.35, 2: 0.55, 3: 0.80, 4: 1.0 };
-        return Math.max(1, Math.round(baseTarget4Player * (scaleFactors[count] || 1.0)));
-    }
-    
-    // --- GAME ENGINE & REROLLS ---
-    function executeLuckReroll() {
-        if (state.isRolling || state.luckPoints <= 0 || !state.lastRollData) return;
-
-        state.luckPoints--;
-        state.isRolling = true;
-        
-        showToast("🍀 Luck Spent!", "Rerolling d20 base die...");
-        
-        const arena = document.getElementById('dice-visual-arena');
-        if (arena) arena.innerHTML = '';
-
-        setTimeout(() => {
-            state.lastRollData.d20 = Math.floor(Math.random() * 20) + 1;
-            state.isRolling = false;
-
-            let grandTotal = state.lastRollData.d20;
-            if (arena) {
-                arena.innerHTML = '';
-                renderFinalDieValue(arena, 'd20', state.lastRollData.d20, 'border-amber-500 bg-amber-500 text-slate-950 shadow-amber-500/20');
-                state.lastRollData.d4.forEach(val => { grandTotal += val; renderFinalDieValue(arena, 'd4', val, 'border-indigo-500 bg-indigo-600 text-white'); });
-                state.lastRollData.d6.forEach(val => { grandTotal += val; renderFinalDieValue(arena, 'd6', val, 'border-purple-500 bg-purple-600 text-white'); });
-                state.lastRollData.d8.forEach(val => { grandTotal += val; renderFinalDieValue(arena, 'd8', val, 'border-pink-500 bg-pink-600 text-white'); });
-            }
-
-            const isSuccess = grandTotal >= state.activeDC;
-            logToCampaign(`🍀 LUCK REROLL: New Total ${grandTotal} vs DC ${state.activeDC}. (${isSuccess ? 'VICTORY' : 'DEFEAT'})`);
-
-            if (state.questHistory.length > 0) {
-                state.questHistory[0].score = grandTotal;
-                state.questHistory[0].passed = isSuccess;
-                renderQuestHistory();
-            }
-            
-            updateInventoryUI();
-            saveState();
-        }, 500);
     }
 
     function renderChores() {
@@ -768,612 +393,166 @@
             `;
             container.appendChild(card);
         });
+        initEncounterArena();
     }
 
     function toggleChoreComplete(id) {
-        if (state.isRolling) return;
         const chore = state.chores.find(c => c.id === id);
         if (!chore) return;
-
         chore.completed = !chore.completed;
         if (chore.completed) {
             state.dicePool[chore.rewardDice]++;
             showToast("⚔️ Quest Finished!", `Earned +1${chore.rewardDice} for "${chore.fantasyName}"`);
-            logToCampaign(`Loot secured: Completed "${chore.fantasyName}" -> +1${chore.rewardDice}.`);
         } else {
             state.dicePool[chore.rewardDice] = Math.max(0, state.dicePool[chore.rewardDice] - 1);
-            logToCampaign(`Chore unchecked: Removed 1${chore.rewardDice}.`);
         }
-        
         renderChores();
         updateInventoryUI();
-        if (state.currentPhase === 'relax') setupInitialDiceArena();
         saveState();
     }
 
     function resetChoresForNewSet() {
-        if (state.isRolling) return;
         state.chores.forEach(c => c.completed = false);
         renderChores();
         saveState();
-        showToast("🔄 Quest Board Cleared", "Ready for the next 30-minute productivity block!");
+        showToast("🔄 Quest Board Cleared", "Ready for the next productivity block!");
     }
 
     function updateInventoryUI() {
-        const d20 = document.getElementById('inventory-d20');
-        const d4 = document.getElementById('inventory-d4');
-        const d6 = document.getElementById('inventory-d6');
-        const d8 = document.getElementById('inventory-d8');
-        const luck = document.getElementById('inventory-luck');
-        const luckBtn = document.getElementById('btn-luck');
-
-        if (d20) d20.innerText = state.dicePool.d20;
-        if (d4) d4.innerText = state.dicePool.d4;
-        if (d6) d6.innerText = state.dicePool.d6;
-        if (d8) d8.innerText = state.dicePool.d8;
-        if (luck) luck.innerText = state.luckPoints;
-
-        if (luckBtn) {
-            luckBtn.innerText = `🍀 Reroll (${state.luckPoints})`;
-            luckBtn.disabled = state.luckPoints <= 0 || !state.lastRollData || state.isRolling;
-        }
+        document.getElementById('inventory-d20').innerText = state.dicePool.d20;
+        document.getElementById('inventory-d4').innerText = state.dicePool.d4;
+        document.getElementById('inventory-d6').innerText = state.dicePool.d6;
+        document.getElementById('inventory-d8').innerText = state.dicePool.d8;
+        document.getElementById('inventory-luck').innerText = state.luckPoints;
     }
 
-    function updateChallengeTarget() {
-        const threatSelect = document.getElementById('select-challenge');
-        const customBox = document.getElementById('custom-challenge-box');
-        if (!threatSelect) return;
-        
-        if (threatSelect.value === 'custom') {
-            if (customBox) customBox.classList.remove('hidden');
-            const customInput = document.getElementById('input-custom-dc');
-            const rawVal = customInput ? parseInt(customInput.value) : 10;
-            state.activeDC = isNaN(rawVal) ? 10 : Math.max(1, rawVal);
-        } else {
-            if (customBox) customBox.classList.add('hidden');
-            const dcMap = { slime: 8, grunt: 10, gate: 12, boss: 15 };
-            state.activeDC = dcMap[threatSelect.value] || 10;
-        }
-
-        const displayDC = document.getElementById('display-dc');
-        if (displayDC) displayDC.innerText = state.activeDC;
-        saveState();
-    }
-
-    function setupInitialDiceArena() {
-        const arena = document.getElementById('dice-visual-arena');
-        if (!arena) return;
-        arena.innerHTML = '';
-
-        createStaticDiceBadge(arena, 'd20', 'bg-amber-600/30 border-amber-500 text-amber-300');
-        for (let i = 0; i < state.dicePool.d4; i++) createStaticDiceBadge(arena, 'd4', 'bg-indigo-600/20 border-indigo-500 text-indigo-300');
-        for (let i = 0; i < state.dicePool.d6; i++) createStaticDiceBadge(arena, 'd6', 'bg-purple-600/20 border-purple-500 text-purple-300');
-        for (let i = 0; i < state.dicePool.d8; i++) createStaticDiceBadge(arena, 'd8', 'bg-pink-600/20 border-pink-500 text-pink-300');
-    }
-
-    function createStaticDiceBadge(container, label, colorClasses) {
-        const badge = document.createElement('div');
-        badge.className = `w-14 h-14 border rounded-xl flex flex-col items-center justify-center font-bold text-xs uppercase shadow ${colorClasses}`;
-        badge.innerHTML = `<span>${label}</span><span class="text-xs opacity-40 font-normal mt-0.5">ready</span>`;
-        container.appendChild(badge);
-    }
-
-    function executeDiceRoll() {
-        if (state.isRolling) return;
-        state.isRolling = true;
-
-        const rollButton = document.getElementById('btn-roll');
-        const luckButton = document.getElementById('btn-luck');
-        const arena = document.getElementById('dice-visual-arena');
-        const promptInput = document.getElementById('input-story-prompt');
-        
-        if (rollButton) rollButton.disabled = true;
-        if (luckButton) luckButton.disabled = true;
-        if (arena) arena.innerHTML = '';
-
-        let resultsTrace = {
-            d20: Math.floor(Math.random() * 20) + 1,
-            d4: Array.from({length: state.dicePool.d4}, () => Math.floor(Math.random() * 4) + 1),
-            d6: Array.from({length: state.dicePool.d6}, () => Math.floor(Math.random() * 6) + 1),
-            d8: Array.from({length: state.dicePool.d8}, () => Math.floor(Math.random() * 8) + 1)
-        };
-
-        if (arena) {
-            appendAnimatedDice(arena, 'd20', 'border-amber-500 bg-amber-950/40 text-amber-400');
-            resultsTrace.d4.forEach(() => appendAnimatedDice(arena, 'd4', 'border-indigo-500 bg-indigo-950/40 text-indigo-400'));
-            resultsTrace.d6.forEach(() => appendAnimatedDice(arena, 'd6', 'border-purple-500 bg-purple-950/40 text-purple-400'));
-            resultsTrace.d8.forEach(() => appendAnimatedDice(arena, 'd8', 'border-pink-500 bg-pink-950/40 text-pink-400'));
-        }
-
-        setTimeout(() => {
-            state.isRolling = false;
-            if (rollButton) rollButton.disabled = false;
-            state.lastRollData = resultsTrace;
-            
-            if (arena) arena.innerHTML = '';
-            let grandTotal = resultsTrace.d20;
-
-            if (arena) {
-                renderFinalDieValue(arena, 'd20', resultsTrace.d20, 'border-amber-500 bg-amber-500 text-slate-950 shadow-amber-500/20');
-                resultsTrace.d4.forEach(val => { grandTotal += val; renderFinalDieValue(arena, 'd4', val, 'border-indigo-500 bg-indigo-600 text-white shadow-indigo-500/20'); });
-                resultsTrace.d6.forEach(val => { grandTotal += val; renderFinalDieValue(arena, 'd6', val, 'border-purple-500 bg-purple-600 text-white shadow-purple-500/20'); });
-                resultsTrace.d8.forEach(val => { grandTotal += val; renderFinalDieValue(arena, 'd8', val, 'border-pink-500 bg-pink-600 text-white shadow-pink-500/20'); });
-            }
-
-            const threatSelect = document.getElementById('select-challenge');
-            const threatName = threatSelect ? threatSelect.options[threatSelect.selectedIndex].text.split('(')[0].trim() : 'Encounter';
-            const isSuccess = grandTotal >= state.activeDC;
-
-            const mvpPlayer = state.activeSlots.find(p => p.name === state.selectedMVP);
-            const mvpLabel = mvpPlayer ? `${mvpPlayer.name} the ${mvpPlayer.class}` : 'Entire Active Party';
-
-            const historyEntry = {
-                id: Date.now(),
-                timestamp: new Date().toLocaleDateString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }),
-                threat: threatName,
-                dc: state.activeDC,
-                score: grandTotal,
-                passed: isSuccess,
-                mvp: mvpLabel,
-                storyPrompt: promptInput ? promptInput.value : "Standard encounter clearance."
-            };
-
-            state.questHistory.unshift(historyEntry);
-
-            if (isSuccess) {
-                logToCampaign(`🔥 COMBAT WIN: Total ${grandTotal} vs DC ${state.activeDC}. MVP: ${mvpLabel}!`);
-                showToast("🎉 Victory Achievement!", "Encounter conquered!");
-                state.dicePool.d4 = 0;
-                state.dicePool.d6 = 0;
-                state.dicePool.d8 = 0;
-            } else {
-                logToCampaign(`❌ DEFEAT: Rolled ${grandTotal} vs DC ${state.activeDC}.`);
-                showToast("💀 Defeat Encountered", "Score fell short.");
-            }
-
-            state.selectedMVP = null;
-            renderMVPButtons();
-            renderQuestHistory();
-            updateInventoryUI();
-            saveState();
-        }, 650);
-    }
-
-    function appendAnimatedDice(container, type, classes) {
-        const element = document.createElement('div');
-        element.className = `w-14 h-14 border rounded-xl flex items-center justify-center font-black text-sm rolling ${classes}`;
-        element.innerText = type;
-        container.appendChild(element);
-    }
-
-    function renderFinalDieValue(container, label, value, classes) {
-        const element = document.createElement('div');
-        element.className = `w-14 h-14 border rounded-xl flex flex-col items-center justify-center font-extrabold text-lg shadow-lg ${classes}`;
-        element.innerHTML = `<span class="text-xs font-mono font-normal opacity-60 leading-none">${label}</span><span class="mt-0.5 leading-none">${value}</span>`;
-        container.appendChild(element);
-    }
-
-    function renderQuestHistory() {
-        const container = document.getElementById('quest-history-timeline');
-        if (!container) return;
-
-        if (state.questHistory.length === 0) {
-            container.innerHTML = '<div class="text-slate-500 italic py-2">No encounters logged yet.</div>';
+    function initEncounterArena() {
+        const encounterSelect = document.getElementById('encounter-target');
+        if (!encounterSelect) return;
+        if (!state.chores || state.chores.length === 0) {
+            encounterSelect.innerHTML = '<option value="">No active quests on board!</option>';
             return;
         }
-
-        container.innerHTML = '';
-        state.questHistory.forEach(entry => {
-            const card = document.createElement('div');
-            card.className = `p-3 rounded-lg border ${entry.passed ? 'border-emerald-900/40 bg-emerald-950/20' : 'border-rose-900/40 bg-rose-950/20'}`;
-            card.innerHTML = `
-                <div class="flex justify-between items-start mb-1">
-                    <span class="font-bold text-xs ${entry.passed ? 'text-emerald-400' : 'text-rose-400'}">
-                        ${entry.passed ? '⚔️ VICTORY:' : '💀 DEFEAT:'} ${entry.threat} (DC ${entry.dc})
-                    </span>
-                    <span class="text-[10px] text-slate-500 font-mono">${entry.timestamp}</span>
-                </div>
-                <p class="text-slate-300 italic text-[11px] mb-2 font-serif">"${entry.storyPrompt}"</p>
-                <div class="flex justify-between items-center text-[10px] text-slate-400 pt-1 border-t border-slate-800/50">
-                    <span>Final Roll: <strong class="text-slate-200">${entry.score}</strong></span>
-                    <span>Standout Hero: <strong class="text-amber-400">${entry.mvp}</strong></span>
-                </div>
-            `;
-            container.appendChild(card);
-        });
+        encounterSelect.innerHTML = state.chores.map((chore, idx) => {
+            let baseDc = 10;
+            if (chore.rewardDice === 'd4') baseDc = 8;
+            if (chore.rewardDice === 'd6') baseDc = 10;
+            if (chore.rewardDice === 'd8') baseDc = 12;
+            return `<option value="${idx}" data-dc="${baseDc}" data-title="${chore.fantasyName}" data-real="${chore.realName}">
+                ${chore.fantasyName} (${chore.realName}) [DC ${baseDc}]
+            </option>`;
+        }).join('');
+        updateEncounterDetails();
     }
 
-    function logToCampaign(text) {
-        const logger = document.getElementById('campaign-log');
-        if (!logger) return;
-        const block = document.createElement('div');
-        const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-        block.className = "py-1.5 text-slate-300 transition hover:bg-slate-900/40";
-        block.innerHTML = `<span class="text-amber-500 font-semibold mr-1.5">[${time}]</span> ${text}`;
-        logger.appendChild(block);
-        logger.scrollTop = logger.scrollHeight;
+    function updateEncounterDetails() {
+        const encounterSelect = document.getElementById('encounter-target');
+        const dcDisplay = document.getElementById('encounter-dc-display');
+        const storyInput = document.getElementById('encounter-story');
+        if (!encounterSelect || !encounterSelect.selectedOptions.length) return;
+
+        const selectedOption = encounterSelect.selectedOptions[0];
+        const dc = selectedOption.getAttribute('data-dc') || '10';
+        const title = selectedOption.getAttribute('data-title') || 'Quest';
+        const real = selectedOption.getAttribute('data-real') || 'chore';
+
+        if (dcDisplay) dcDisplay.textContent = dc;
+        if (storyInput && !storyInput.value.trim()) {
+            storyInput.value = `The realm trembles as the party confronts "${title}", stemming from the dreaded real-world task of ${real}...`;
+        }
+    }
+
+    async function generateRichEncounterStory() {
+        let apiKey = localStorage.getItem('gemini_api_key');
+        if (!apiKey) {
+            apiKey = prompt("Enter your Google Gemini API Key for narrative generation:\n\nGet a free key at aistudio.google.com");
+            if (!apiKey) return;
+            localStorage.setItem('gemini_api_key', apiKey.trim());
+        }
+        const encounterSelect = document.getElementById('encounter-target');
+        const storyInput = document.getElementById('encounter-story');
+        if (!encounterSelect || !encounterSelect.selectedOptions.length || !encounterSelect.value) return;
+
+        const title = encounterSelect.selectedOptions[0].getAttribute('data-title');
+        const real = encounterSelect.selectedOptions[0].getAttribute('data-real');
+        if (storyInput) storyInput.value = "✨ Conjuring immersive fantasy encounter scene...";
+
+        try {
+            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=${apiKey}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    contents: [{ parts: [{ text: `Write a rich 2-paragraph fantasy RPG encounter scene based on the chore "${real}" named "${title}".` }] }]
+                })
+            });
+            const data = await response.json();
+            const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+            if (rawText && storyInput) storyInput.value = rawText.trim();
+        } catch (err) {
+            if (storyInput) storyInput.value = `The dark forces of "${title}" (${real}) have manifested. Stand ready, heroes!`;
+        }
+    }
+
+    function rollVirtualDice(type) {
+        const output = document.getElementById('virtual-dice-output');
+        let max = type === 'd20' ? 20 : 6;
+        let roll = Math.floor(Math.random() * max) + 1;
+        if (output) output.innerHTML = `<span class="text-amber-400 font-bold">🎲 Rolled ${type.toUpperCase()}:</span> <span class="text-white text-sm font-black">${roll}</span>`;
+    }
+
+    function addPlayerRollRow() {
+        const container = document.getElementById('player-rolls-container');
+        if (!container) return;
+        const rowCount = container.querySelectorAll('.player-roll-row').length + 1;
+        const newRow = document.createElement('div');
+        newRow.className = 'flex items-center gap-3 p-3 rounded-xl bg-slate-900 border border-slate-800 player-roll-row';
+        newRow.innerHTML = `
+            <input type="text" placeholder="Player Name" value="Player ${rowCount}" class="w-1/3 px-3 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-slate-200 text-xs focus:outline-none player-name-input">
+            <div class="flex-1 flex items-center gap-2">
+                <label class="text-[10px] font-mono text-slate-400">Total Roll:</label>
+                <input type="number" placeholder="e.g. 12" class="w-24 px-3 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-slate-200 text-xs focus:outline-none player-score-input">
+            </div>
+            <button onclick="this.closest('.player-roll-row').remove()" class="text-slate-500 hover:text-rose-400 text-xs px-2">✕</button>
+        `;
+        container.appendChild(newRow);
+    }
+
+    function resolveEncounterOutcome() {
+        const encounterSelect = document.getElementById('encounter-target');
+        const dcDisplay = document.getElementById('encounter-dc-display');
+        const targetDC = dcDisplay ? parseInt(dcDisplay.textContent) || 10 : 10;
+        const playerRows = document.querySelectorAll('.player-roll-row');
+        if (playerRows.length === 0) return alert("Add at least one player roll outcome!");
+
+        let resultsSummary = [];
+        let partySuccess = true;
+
+        playerRows.forEach(row => {
+            const name = row.querySelector('.player-name-input').value.trim() || 'Hero';
+            const score = parseInt(row.querySelector('.player-score-input').value);
+            if (isNaN(score)) {
+                resultsSummary.push(`${name}: No roll recorded`);
+                partySuccess = false;
+            } else if (score >= targetDC) {
+                resultsSummary.push(`${name}: Rolled ${score} (SUCCESS vs DC ${targetDC})`);
+            } else {
+                resultsSummary.push(`${name}: Rolled ${score} (FAILED vs DC ${targetDC})`);
+                partySuccess = false;
+            }
+        });
+
+        alert((partySuccess ? "🎉 VICTORY! Party succeeded!" : "⚔️ DEFEAT! Try again or level up.") + "\n\nBreakdown:\n" + resultsSummary.join('\n'));
     }
 
     function showToast(title, body) {
         let el = document.getElementById('toast');
-        if (!el) {
-            el = document.createElement('div');
-            el.id = 'toast';
-            document.body.appendChild(el);
-        }
-
-        const iconEl = document.getElementById('toast-icon');
-        const msgEl = document.getElementById('toast-msg');
-        if (iconEl) iconEl.innerText = title.includes("Victory") || title.includes("Finished") || title.includes("Loaded") || title.includes("Exported") ? "⭐" : "📜";
-        if (msgEl) msgEl.innerHTML = `<strong class="text-slate-100">${title}</strong> <span class="block text-xs text-slate-400 mt-0.5">${body}</span>`;
-        
+        if (!el) return;
+        document.getElementById('toast-msg').innerHTML = `<strong class="text-slate-100">${title}</strong> <span class="block text-xs text-slate-400 mt-0.5">${body}</span>`;
         el.className = "fixed bottom-5 right-5 max-w-sm bg-slate-800 border border-slate-700 p-4 rounded-xl shadow-2xl transition-all duration-300 transform translate-y-0 opacity-100 z-50 flex items-center space-x-3";
         setTimeout(() => {
             el.className = "fixed bottom-5 right-5 max-w-sm bg-slate-800 border border-slate-700 p-4 rounded-xl shadow-2xl transition-all duration-300 transform translate-y-20 opacity-0 pointer-events-none z-50 flex items-center space-x-3";
         }, 3000);
     }
-    async function generateGeminiStory() {
-    let apiKey = localStorage.getItem('gemini_api_key');
-    
-    if (!apiKey) {
-        apiKey = prompt("To use AI story generation for free, enter your Google Gemini API Key (it will be saved securely in your browser's local storage):\n\nGet a free key instantly at aistudio.google.com");
-        if (!apiKey) return;
-        localStorage.setItem('gemini_api_key', apiKey.replace(/\s+/g, ''));
-    }
-    
-    apiKey = localStorage.getItem('gemini_api_key') ? localStorage.getItem('gemini_api_key').replace(/\s+/g, '') : '';
-
-    const promptInput = document.getElementById('input-story-prompt');
-    if (promptInput) {
-        promptInput.value = "✨ Consulting the digital grimoire (Generating AI story)...";
-        promptInput.disabled = true;
-    }
-
-    try {
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=${apiKey}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                contents: [{
-                    parts: [{ text: "Write a short, punchy, 1-sentence fantasy campaign scenario (under 20 words) where a heroic party fights a household chore or routine task monster (like a Dust Slime, Laundry Golem, or Dish Dragon). Return only the sentence without quotation marks." }]
-                }]
-            })
-        });
-
-        const data = await response.json();
-        
-        if (data.error) {
-            throw new Error(data.error.message || "API Error");
-        }
-
-        const storyText = data.candidates?.[0]?.content?.parts?.[0]?.text;
-        
-        if (storyText && promptInput) {
-            const cleanText = storyText.trim().replace(/^["']|["']$/g, '');
-            promptInput.value = cleanText;
-            
-            if (typeof state !== 'undefined') {
-                state.activeStoryPrompt = cleanText;
-            }
-            if (typeof saveState === 'function') {
-                saveState();
-            }
-        } else {
-            throw new Error("Could not parse AI response.");
-        }
-    } catch (err) {
-        console.error("Gemini API Error:", err);
-        localStorage.removeItem('gemini_api_key');
-        alert("Generation failed. Your stored API key was invalid or incorrect and has been cleared. Please click 'Generate AI Hook' again to enter a fresh key.");
-        if (promptInput) promptInput.value = state.activeStoryPrompt || "";
-    } finally {
-        if (promptInput) promptInput.disabled = false;
-    }
-}
-    // AI Generator and Custom Chore Management Functions
-async function generateAIChoreIdea() {
-    let apiKey = localStorage.getItem('gemini_api_key');
-    
-    if (!apiKey) {
-        apiKey = prompt("To use AI chore generation for free, enter your Google Gemini API Key (saved securely in local storage):\n\nGet a free key instantly at aistudio.google.com");
-        if (!apiKey) return;
-        localStorage.setItem('gemini_api_key', apiKey.replace(/\s+/g, ''));
-    }
-    
-    apiKey = localStorage.getItem('gemini_api_key') ? localStorage.getItem('gemini_api_key').replace(/\s+/g, '') : '';
-
-    const titleInput = document.getElementById('custom-chore-title');
-    const descInput = document.getElementById('custom-chore-desc');
-
-    if (titleInput) titleInput.value = "✨ Conjuring quest...";
-    if (descInput) descInput.value = "✨ Conjuring task...";
-
-    try {
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=${apiKey}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                contents: [{
-                    parts: [{ text: "Generate a creative fantasy chore pairing for a household productivity RPG. Return ONLY a valid JSON object with exactly two keys: 'fantasy' (a catchy fantasy quest name under 6 words) and 'real' (the corresponding real-world household chore under 5 words). Do not include markdown formatting like ```json." }]
-                }]
-            })
-        });
-
-        const data = await response.json();
-        
-        if (data.error) {
-            throw new Error(data.error.message || "API Error");
-        }
-
-        const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text;
-        if (!rawText) throw new Error("Empty response from AI.");
-
-        const cleanJsonStr = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
-        const choreObj = JSON.parse(cleanJsonStr);
-
-        if (titleInput) titleInput.value = choreObj.fantasy || "Banish Dust Sprites";
-        if (descInput) descInput.value = choreObj.real || "Dust the Living Room";
-
-    } catch (err) {
-        console.error("AI Chore Generation Error:", err);
-        localStorage.removeItem('gemini_api_key');
-        alert("Generation failed or key was invalid. Key has been cleared. Try clicking again.");
-        if (titleInput) titleInput.value = "";
-        if (descInput) descInput.value = "";
-    }
-}
-
-function addNewChoreToBoard() {
-    const title = document.getElementById('custom-chore-title').value.trim();
-    const desc = document.getElementById('custom-chore-desc').value.trim();
-    const loot = document.getElementById('custom-chore-loot').value;
-    const isLocked = document.getElementById('custom-chore-locked')?.checked || false;
-
-    if (!title || !desc) {
-        alert("Please provide both a fantasy quest name and a real-world chore description!");
-        return;
-    }
-
-    if (typeof state === 'undefined') {
-        window.state = { chores: [] };
-    }
-    if (!state.chores) {
-        state.chores = [];
-    }
-
-    // Map all possible property names (title/name, description/realWorld, loot/dice) to prevent 'undefined' errors
-    state.chores.push({
-        id: 'chore_' + Date.now(),
-        title: title,
-        name: title,
-        description: desc,
-        realWorld: desc,
-        real: desc,
-        loot: loot,
-        dice: loot,
-        completed: false,
-        custom: true,
-        locked: isLocked
-    });
-
-    // Clear inputs and uncheck lock box
-    document.getElementById('custom-chore-title').value = '';
-    document.getElementById('custom-chore-desc').value = '';
-    const lockBox = document.getElementById('custom-chore-locked');
-    if (lockBox) lockBox.checked = false;
-
-    if (typeof saveState === 'function') saveState();
-    if (typeof renderQuestBoard === 'function') {
-        renderQuestBoard();
-    } else {
-        location.reload();
-    }
-}
-
-// Toggle individual chore lock/save status directly from its card checkbox
-function toggleChoreLock(choreId, isLocked) {
-    if (typeof state === 'undefined' || !state.chores) return;
-    
-    const chore = state.chores.find(c => c.id === choreId);
-    if (chore) {
-        chore.locked = isLocked;
-        if (typeof saveState === 'function') saveState();
-    }
-}
-
-// Updated Reset / Erase Function that clears everything except individually locked/saved tasks
-function resetChoresForNewSet() {
-    if (typeof state === 'undefined' || !state.chores) return;
-
-    // Filter out all chores where locked is not true
-    state.chores = state.chores.filter(chore => chore.locked === true);
-
-    if (typeof saveState === 'function') saveState();
-    if (typeof renderQuestBoard === 'function') {
-        renderQuestBoard();
-    } else {
-        location.reload();
-    }
-}
-
-// Populate Encounter Arena dropdown from active Quest Board chores
-function initEncounterArena() {
-    const encounterSelect = document.getElementById('encounter-target');
-    if (!encounterSelect) return;
-
-    if (!state.chores || state.chores.length === 0) {
-        encounterSelect.innerHTML = '<option value="">No active quests on board! Add quests first.</option>';
-        return;
-    }
-
-    encounterSelect.innerHTML = state.chores.map((chore, idx) => {
-        const title = chore.title || chore.name || "Unnamed Quest";
-        const real = chore.description || chore.realWorld || chore.real || "Chore";
-        const loot = (chore.loot || chore.dice || "d6").toLowerCase();
-        
-        let baseDc = 10;
-        if (loot.includes('d4')) baseDc = 8;
-        if (loot.includes('d6')) baseDc = 10;
-        if (loot.includes('d8')) baseDc = 12;
-        if (loot.includes('d10')) baseDc = 14;
-
-        return `<option value="${idx}" data-dc="${baseDc}" data-title="${title}" data-real="${real}">
-            ${title} (${real}) [DC ${baseDc}]
-        </option>`;
-    }).join('');
-
-    updateEncounterDetails();
-}
-
-// Update Target DC display and set initial prompt text based on selected chore
-function updateEncounterDetails() {
-    const encounterSelect = document.getElementById('encounter-target');
-    const dcDisplay = document.getElementById('encounter-dc-display');
-    const storyInput = document.getElementById('encounter-story');
-    
-    if (!encounterSelect || !encounterSelect.selectedOptions.length) return;
-
-    const selectedOption = encounterSelect.selectedOptions[0];
-    const dc = selectedOption.getAttribute('data-dc') || '10';
-    const title = selectedOption.getAttribute('data-title') || 'Quest';
-    const real = selectedOption.getAttribute('data-real') || 'chore';
-
-    if (dcDisplay) dcDisplay.textContent = dc;
-    if (storyInput && !storyInput.value.trim()) {
-        storyInput.value = `The realm trembles as the party confronts "${title}", stemming from the dreaded real-world task of ${real}. Tensions run high as heroes prepare their equipment and brace for the challenge ahead...`;
-    }
-}
-
-// Generate a rich, immersive 2-3 paragraph encounter story via Gemini using the quest board chore
-async function generateRichEncounterStory() {
-    let apiKey = localStorage.getItem('gemini_api_key');
-    if (!apiKey) {
-        apiKey = prompt("Enter your Google Gemini API Key for rich narrative generation:\n\nGet a free key instantly at aistudio.google.com");
-        if (!apiKey) return;
-        localStorage.setItem('gemini_api_key', apiKey.replace(/\s+/g, ''));
-    }
-
-    const encounterSelect = document.getElementById('encounter-target');
-    const storyInput = document.getElementById('encounter-story');
-    
-    if (!encounterSelect || !encounterSelect.selectedOptions.length || !encounterSelect.value) {
-        alert("Please select a valid quest target from the dropdown first!");
-        return;
-    }
-
-    const selectedOption = encounterSelect.selectedOptions[0];
-    const title = selectedOption.getAttribute('data-title') || 'Quest';
-    const real = selectedOption.getAttribute('data-real') || 'chore';
-
-    if (storyInput) storyInput.value = "✨ Conjuring a rich, immersive fantasy encounter scene...";
-
-    try {
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=${apiKey}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                contents: [{
-                    parts: [{ text: `Write a rich, engaging, 2-to-3 paragraph fantasy RPG encounter scene and backstory based on the household chore "${real}" named "${title}". Vividly set up the scene, what happened, the atmospheric buildup, and why the party must conquer it before chaos ensues. Make it exciting, atmospheric, and descriptive.` }]
-                }]
-            })
-        });
-
-        const data = await response.json();
-        const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text;
-        
-        if (rawText && storyInput) {
-            storyInput.value = rawText.trim().replace(/^["']|["']$/g, '');
-        } else {
-            throw new Error("Invalid response format");
-        }
-    } catch (err) {
-        console.error("AI Story Generation Error:", err);
-        localStorage.removeItem('gemini_api_key');
-        if (storyInput) {
-            storyInput.value = `The dark forces of "${title}" have manifested around the household task of ${real}. Shadows lengthen across the room as the heroic party steps forward, weapons and cleaning tools gleaming, ready to decide the fate of the realm in this epic confrontation.`;
-        }
-    }
-}
-
-// Digital Virtual Dice Roller for players without physical dice
-function rollVirtualDice(type) {
-    const output = document.getElementById('virtual-dice-output');
-    let max = type === 'd20' ? 20 : 6;
-    let roll = Math.floor(Math.random() * max) + 1;
-    
-    if (output) {
-        output.innerHTML = `<span class="text-amber-400 font-bold">🎲 Rolled a ${type.toUpperCase()}:</span> <span class="text-white text-sm font-black">${roll}</span> (Simulated digital roll)`;
-    }
-}
-
-// Add a new row to input individual player roll outcomes
-function addPlayerRollRow() {
-    const container = document.getElementById('player-rolls-container');
-    if (!container) return;
-
-    const rowCount = container.querySelectorAll('.player-roll-row').length + 1;
-    const newRow = document.createElement('div');
-    newRow.className = 'flex items-center gap-3 p-3 rounded-xl bg-slate-900 border border-slate-800 player-roll-row';
-    newRow.innerHTML = `
-        <input type="text" placeholder="Player Name" value="Player ${rowCount}" class="w-1/3 px-3 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-slate-200 text-xs focus:outline-none focus:border-amber-500/50 player-name-input">
-        <div class="flex-1 flex items-center gap-2">
-            <label class="text-[10px] font-mono text-slate-400">Total Roll:</label>
-            <input type="number" placeholder="e.g. 12" class="w-24 px-3 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-slate-200 text-xs focus:outline-none focus:border-amber-500/50 player-score-input">
-        </div>
-        <button onclick="this.closest('.player-roll-row').remove()" class="text-slate-500 hover:text-rose-400 text-xs px-2">✕</button>
-    `;
-    container.appendChild(newRow);
-}
-
-// Resolve Encounter and check party rolls against the Target DC
-function resolveEncounterOutcome() {
-    const encounterSelect = document.getElementById('encounter-target');
-    const dcDisplay = document.getElementById('encounter-dc-display');
-    const targetDC = dcDisplay ? parseInt(dcDisplay.textContent) || 10 : 10;
-
-    if (!encounterSelect || !encounterSelect.selectedOptions.length || !encounterSelect.value) {
-        alert("Please select an active quest target first!");
-        return;
-    }
-
-    const selectedOption = encounterSelect.selectedOptions[0];
-    const questTitle = selectedOption.getAttribute('data-title') || 'Quest';
-
-    const playerRows = document.querySelectorAll('.player-roll-row');
-    if (playerRows.length === 0) {
-        alert("Please add at least one player roll outcome!");
-        return;
-    }
-
-    let resultsSummary = [];
-    let partySuccess = true;
-
-    playerRows.forEach(row => {
-        const nameInput = row.querySelector('.player-name-input');
-        const scoreInput = row.querySelector('.player-score-input');
-        const playerName = nameInput ? nameInput.value.trim() || 'Hero' : 'Hero';
-        const playerScore = scoreInput ? parseInt(scoreInput.value) : NaN;
-
-        if (isNaN(playerScore)) {
-            resultsSummary.push(`${playerName}: No roll recorded`);
-            partySuccess = false;
-        } else if (playerScore >= targetDC) {
-            resultsSummary.push(`${playerName}: Rolled ${playerScore} (SUCCESS vs DC ${targetDC})`);
-        } else {
-            resultsSummary.push(`${playerName}: Rolled ${playerScore} (FAILED vs DC ${targetDC})`);
-            partySuccess = false;
-        }
-    });
-
-    const outcomeText = partySuccess ? `🎉 VICTORY! The party successfully conquered "${questTitle}"!` : `⚔️ DEFEAT / STRUGGLE against "${questTitle}". Try again or level up your pool!`;
-    
-    alert(`${outcomeText}\n\nBreakdown:\n` + resultsSummary.join('\n'));
-}
-
-// Auto-initialize encounter arena on load
-document.addEventListener('DOMContentLoaded', () => {
-    initEncounterArena();
-});
 </script>
 </body>
 </html>
