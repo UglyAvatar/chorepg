@@ -186,9 +186,15 @@
                         <input type="number" id="input-custom-dc" min="1" max="99" value="10" onchange="updateChallengeTarget()" class="w-20 p-1.5 bg-slate-900 border border-slate-800 rounded text-xs text-slate-200 text-center">
                     </div>
 
-                    <div class="text-right">
-                        <span class="text-[10px] uppercase font-mono text-slate-500 block">Target Score to Pass</span>
-                        <span class="text-2xl font-black text-amber-400" id="display-dc">10</span>
+                    <div class="flex items-center gap-4">
+                        <!-- Auto-Sync button to pull creatures & threat level from Quest Board chores -->
+                        <button onclick="autoGenerateEncounterFromQuests()" class="px-3 py-2 bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-300 text-xs font-bold rounded-lg transition flex items-center gap-1.5" title="Intelligently generate creature & GM narrative from Quest Board chores">
+                            <span>🪄 Auto-Sync Quest Threat</span>
+                        </button>
+                        <div class="text-right">
+                            <span class="text-[10px] uppercase font-mono text-slate-500 block">Target Score to Pass</span>
+                            <span class="text-2xl font-black text-amber-400" id="display-dc">10</span>
+                        </div>
                     </div>
                 </div>
 
@@ -196,6 +202,7 @@
                 <div>
                     <div class="flex justify-between items-center mb-1">
                         <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider">Story Narrative Seed</label>
+                        <!-- Preserved existing AI Hook generation button -->
                         <button onclick="generateGeminiStory()" class="text-[10px] text-amber-400 hover:text-amber-300 flex items-center gap-1 transition-colors cursor-pointer" title="Generate a random story hook using Google Gemini">
                             ✨ Generate AI Hook
                         </button>
@@ -877,26 +884,79 @@
         }
     }
 
-    function updateChallengeTarget() {
-        const threatSelect = document.getElementById('select-challenge');
-        const customBox = document.getElementById('custom-challenge-box');
-        if (!threatSelect) return;
-        
-        if (threatSelect.value === 'custom') {
-            if (customBox) customBox.classList.remove('hidden');
-            const customInput = document.getElementById('input-custom-dc');
-            const rawVal = customInput ? parseInt(customInput.value) : 10;
-            state.activeDC = isNaN(rawVal) ? 10 : Math.max(1, rawVal);
-        } else {
-            if (customBox) customBox.classList.add('hidden');
-            const dcMap = { slime: 8, grunt: 10, gate: 12, boss: 15 };
-            state.activeDC = dcMap[threatSelect.value] || 10;
-        }
+    // Chore-to-Creature Lexicon & D&D Game Master Narrative Generator
+const questMonsterLexicon = {
+    dish: { name: "Kitchen Overlord / Suds Slime", targetValue: "boss", dc: 15, desc: "The grease and plates have formed a gelatinous monolith blocking the sink! The Dungeon Master slams their DM screen down: 'Roll for initiative against the foaming tide!'" },
+    vacuum: { name: "Dust-Devil Elemental", targetValue: "grunt", dc: 10, desc: "A roaring vortex of carpet fuzz and forgotten crumbs whirls across the living room floor. The Game Master leans forward: 'The dust storms whisper ancient curses of unvacuumed corners.'" },
+    trash: { name: "Chaos Serpent / Bin Goblin", targetValue: "gate", dc: 12, desc: "Scuttling sounds echo from the overflowing bins as plastic wrappers mutate into serpentine horrors. The Game Master growls: 'The stench of neglected garbage summons the swamp beasts!'" },
+    laundry: { name: "Laundry Golem", targetValue: "grunt", dc: 10, desc: "A towering pile of mismatched socks and damp towels animates into a lumbering behemoth. The Game Master notes: 'The mountain of fabric demands tribute or battle!'" },
+    default: { name: "Procrastination Imp", targetValue: "slime", dc: 8, desc: "A mischievous imp sits upon your desk, whispering sweet excuses to delay all tasks. The Game Master smiles deviously: 'Defeat this minor nuisance to clear your mind!'" }
+};
 
-        const displayDC = document.getElementById('display-dc');
-        if (displayDC) displayDC.innerText = state.activeDC;
-        saveState();
+function autoGenerateEncounterFromQuests() {
+    let questTitles = [];
+    if (typeof state !== 'undefined' && state.chores) {
+        state.chores.forEach(c => {
+            if (c.title) questTitles.push(c.title.toLowerCase());
+            if (c.desc) questTitles.push(c.desc.toLowerCase());
+        });
     }
+    
+    if (questTitles.length === 0) {
+        const elements = document.querySelectorAll('#chores-container .chore-title, .quest-item, h4');
+        elements.forEach(el => questTitles.push(el.innerText.toLowerCase()));
+    }
+    
+    if (questTitles.length === 0) {
+        questTitles = ["clean dishes", "vacuum floor", "take out trash", "laundry"];
+    }
+
+    const selectedTask = questTitles[Math.floor(Math.random() * questTitles.length)];
+    let matchedKey = Object.keys(questMonsterLexicon).find(key => selectedTask.includes(key)) || 'default';
+    let monsterInfo = questMonsterLexicon[matchedKey];
+
+    const selectChallenge = document.getElementById('select-challenge');
+    const customBox = document.getElementById('custom-challenge-box');
+    if (selectChallenge) {
+        selectChallenge.value = monsterInfo.targetValue;
+        if (customBox) customBox.classList.add('hidden');
+    }
+
+    const storyInput = document.getElementById('input-story-prompt');
+    if (storyInput) {
+        storyInput.value = monsterInfo.desc;
+        if (typeof state !== 'undefined') {
+            state.activeStoryPrompt = monsterInfo.desc;
+        }
+    }
+
+    updateChallengeTarget();
+    if (typeof saveState === 'function') saveState();
+}
+
+// Existing challenge update function
+function updateChallengeTarget() {
+    const select = document.getElementById('select-challenge');
+    const customBox = document.getElementById('custom-challenge-box');
+    const displayDc = document.getElementById('display-dc');
+    if (!select) return;
+
+    let dc = 10;
+    if (select.value === 'slime') dc = 8;
+    else if (select.value === 'grunt') dc = 10;
+    else if (select.value === 'gate') dc = 12;
+    else if (select.value === 'boss') dc = 15;
+    else if (select.value === 'custom') {
+        customBox.classList.remove('hidden');
+        const customInput = document.getElementById('input-custom-dc');
+        dc = parseInt(customInput.value) || 10;
+    } else {
+        customBox.classList.add('hidden');
+    }
+    displayDc.innerText = dc;
+    state.activeChallengeDC = dc;
+    saveState();
+}
 
     function setupInitialDiceArena() {
         const arena = document.getElementById('dice-visual-arena');
