@@ -3,7 +3,7 @@
 > **Turn real-life household productivity into an epic tabletop campaign!**
 
 **Chore RPG** is a lightweight, zero-dependency, single-file web application designed to gamify household chores through a structured 30-minute productivity and rest loop. Complete chores to earn extra dice (`d4`, `d6`, `d8`), build your party roster, and unleash your combat dice pool against mythical threat levels!
-
+https://uglyavatar.github.io/chorepg/
 ---
 
 ## ✨ Features
